@@ -32,13 +32,13 @@ public class Demo {
         State<Integer> s1 = builder.newTransitionState("1");
         // s2 takes Integer as input and has name "2"
         State<Integer> s2 = builder.newTransitionState("2");
-        // s3 takes String as input, any value arrive at this state is considered as a output
+        // s3 takes String as input, any value arrive at this state is considered as an output
         State<String> s3 = builder.newOutputState("3");  
 
         // Define transitions
-        // s1 multiply given integer by 2 and transition to s2
+        // s1 multiply given integer by 2 and move to s2
         builder.addTransition(s1, (inp, ctx) -> s2.of(inp * 2));
-        // s2 adds given integer by 1 and transition to s3
+        // s2 adds given integer by 1 and move to s3
         builder.addTransition(s2, (inp, ctx) -> s3.of(String.valueOf(inp + 1)));
 
         // Build and run
