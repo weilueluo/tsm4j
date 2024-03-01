@@ -1,4 +1,4 @@
-package com.tsm4j;
+package com.tsm4j.core;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -23,14 +23,14 @@ public class StateMachine<I, O> {
     @EqualsAndHashCode.Include
     private final StateMachineId id;
 
-    private final Set<State<?>> states;
+    private final Set<StateImpl<?>> states;
     private final Map<Class<?>, ExceptionHandler<? extends RuntimeException>> exceptionHandlerMap;
 
-    public StateMachineResult<O> run(NextState<I> initState) {
+    public StateMachineResult<O> run(NextStateImpl<I> initState) {
         log.debug("[StateMachine={}] Starting", id);
 
         // setup
-        Context context = new Context(id);
+        ContextImpl context = new ContextImpl(id);
         StateMachineResult.StateMachineResultBuilder<O> resultBuilder = StateMachineResult.builder();
 
         // run state machine
@@ -41,8 +41,8 @@ public class StateMachine<I, O> {
         while (!remainingStates.isEmpty()) {
 
             final RunningState<?> runningState = remainingStates.poll();
-            final State<?> currState = runningState.next.getState();
-            final List<Supplier<NextState<?>>> nextStateSuppliers = runningState.next.getOrderedNextStateSuppliers(context);
+            final StateImpl<?> currState = runningState.next.getState();
+            final List<Supplier<NextStateImpl<?>>> nextStateSuppliers = runningState.next.getOrderedNextStateSuppliers(context);
 
             log.trace("[StateMachine={}] Current state: {}", id, currState);
             if (!states.contains(currState)) {  // sanity check
@@ -64,9 +64,9 @@ public class StateMachine<I, O> {
                 continue;
             }
 
-            for (Supplier<NextState<?>> supplier : nextStateSuppliers) {
+            for (Supplier<NextStateImpl<?>> supplier : nextStateSuppliers) {
                 try {
-                    NextState<?> nextState = supplier.get();
+                    NextStateImpl<?> nextState = supplier.get();
                     remainingStates.add(runningState.next(nextState));
                 } catch (RuntimeException e) {  // transition breaking from normal flow
                     handleException(e, runningState, remainingStates, context);
@@ -80,14 +80,14 @@ public class StateMachine<I, O> {
         return result;
     }
 
-    // recursively handle exception from transition and possibly exception handlers themselves
-    private <E extends RuntimeException> void handleException(E e, RunningState<?> runningState, PriorityQueue<RunningState<?>> remainingStates, Context context) {
+    // recursively handle exception from transition and exception from handlers themselves
+    private <E extends RuntimeException> void handleException(E e, RunningState<?> runningState, PriorityQueue<RunningState<?>> remainingStates, ContextImpl context) {
         Optional<ExceptionHandler<E>> handlerToUse = getClosestExceptionHandler(e.getClass());
         if (!handlerToUse.isPresent()) {
             throw e;
         } else {
             try {
-                NextState<?> nextState = handlerToUse.get().apply(e, context);
+                NextStateImpl<?> nextState = handlerToUse.get().apply(e, context);
                 remainingStates.add(runningState.next(nextState));
             } catch (RuntimeException nestedException) {
                 if (nestedException == e) { // avoid infinite recursion
@@ -112,19 +112,19 @@ public class StateMachine<I, O> {
 
     @RequiredArgsConstructor(staticName = "of", access = AccessLevel.PRIVATE)
     private static class RunningState<T> implements Comparable<RunningState<?>> {
-        private final NextState<T> next;
-        private final LinkedList<NextState<?>> history;
+        private final NextStateImpl<T> next;
+        private final LinkedList<NextStateImpl<?>> history;
 
-        static <R> RunningState<R> initial(NextState<R> nextState) {
+        static <R> RunningState<R> initial(NextStateImpl<R> nextState) {
             return new RunningState<>(nextState, new LinkedList<>());
         }
 
-        <R> RunningState<R> next(NextState<R> followingState) {
+        <R> RunningState<R> next(NextStateImpl<R> followingState) {
             return of(followingState, complete());
         }
 
-        LinkedList<NextState<?>> complete() {
-            final LinkedList<NextState<?>> allHistory = new LinkedList<>(this.history);
+        LinkedList<NextStateImpl<?>> complete() {
+            final LinkedList<NextStateImpl<?>> allHistory = new LinkedList<>(this.history);
             allHistory.add(next);
             return allHistory;
         }

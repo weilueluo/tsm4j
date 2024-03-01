@@ -1,6 +1,7 @@
-package com.tsm4j;
+package com.tsm4j.core;
 
-import com.tsm4j.statetypes.StateType;
+import com.tsm4j.core.statetypes.StateTypeImpl;
+import com.tsm4j.core.statetypes.StateTypes;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -16,33 +17,33 @@ import java.util.Set;
 public class StateMachineBuilder<I, O> {
 
     private final StateMachineId stateMachineId;
-    private final Set<State<?>> states = new HashSet<>(Collections.singletonList(NextState.leaf().getState()));
+    private final Set<StateImpl<?>> states = new HashSet<>(Collections.singletonList(NextStateImpl.leaf().getState()));
     private final Map<Class<?>, ExceptionHandler<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
 
     public static <I, O> StateMachineBuilder<I, O> create(String name) {
         return new StateMachineBuilder<>(StateMachineId.of(name));
     }
 
-    public <T> State<T> newTransitionState(String name) {
-        return this.newTransitionState(name, State.DEFAULT_PRECEDENCE);
+    public <T> StateImpl<T> newTransitionState(String name) {
+        return this.newTransitionState(name, Order.DEFAULT_PRECEDENCE);
     }
 
-    public <T> State<T> newTransitionState(String name, int order) {
+    public <T> StateImpl<T> newTransitionState(String name, int order) {
         return this.newState(name, StateTypes.TRANSITION, order);
     }
 
-    public State<O> newOutputState(String name, int order) {
+    public StateImpl<O> newOutputState(String name, int order) {
         return this.newState(name, StateTypes.OUTPUT, order);
     }
 
-    public State<O> newOutputState(String name) {
-        return this.newOutputState(name, State.DEFAULT_PRECEDENCE);
+    public StateImpl<O> newOutputState(String name) {
+        return this.newOutputState(name, Order.DEFAULT_PRECEDENCE);
     }
 
-    private <T> State<T> newState(String name, StateType type, int order) {
+    private <T> StateImpl<T> newState(String name, StateTypeImpl type, int order) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(type);
-        State<T> state = State.of(StateId.of(name, type, order));
+        StateImpl<T> state = StateImpl.of(StateId.of(name, type, order));
         if (this.states.add(state)) {
             return state;
         } else {
@@ -59,7 +60,7 @@ public class StateMachineBuilder<I, O> {
         this.exceptionHandlerMap.put(clazz, exceptionHandler);
     }
 
-    public final <T> void addTransition(State<T> state, Transition<T> transition, int order) {
+    public final <T> void addTransition(StateImpl<T> state, TransitionWithContext<T> transition, int order) {
         Objects.requireNonNull(state);
         Objects.requireNonNull(transition);
         if (!this.states.contains(state)) {
@@ -68,8 +69,16 @@ public class StateMachineBuilder<I, O> {
         state.addTransition(transition, order);
     }
 
-    public final <T> void addTransition(State<T> state, Transition<T> transition) {
-        this.addTransition(state, transition, Transition.DEFAULT_PRECEDENCE);
+    public <T> void addTransition(StateImpl<T> state, Transition<T> transition, int order) {
+       this.addTransition(state, (TransitionWithContext<T>) transition, order);
+    }
+
+    public <T> void addTransition(StateImpl<T> state, TransitionWithContext<T> transition) {
+        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+    }
+
+    public <T> void addTransition(StateImpl<T> state, Transition<T> transition) {
+        this.addTransition(state, (TransitionWithContext<T>) transition, Order.DEFAULT_PRECEDENCE);
     }
 
     public StateMachine<I, O> build() {

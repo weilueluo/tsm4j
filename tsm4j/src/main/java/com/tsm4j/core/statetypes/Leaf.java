@@ -1,4 +1,4 @@
-package com.tsm4j.statetypes;
+package com.tsm4j.core.statetypes;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

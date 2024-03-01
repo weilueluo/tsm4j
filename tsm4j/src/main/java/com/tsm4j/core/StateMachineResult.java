@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 public class StateMachineResult<O> {
 
     @Singular
-    private final List<LinkedList<NextState<?>>> outputPaths;
+    private final List<LinkedList<NextStateImpl<?>>> outputPaths;
     @Singular
-    private final List<LinkedList<NextState<?>>> leafPaths;
+    private final List<LinkedList<NextStateImpl<?>>> leafPaths;
     @Singular
-    private final List<LinkedList<NextState<?>>> implicitLeafPaths;
+    private final List<LinkedList<NextStateImpl<?>>> implicitLeafPaths;
 
     @SuppressWarnings("unchecked")  // ensured by state machine builder, result state T always has data T
     public List<O> getOutputs() {

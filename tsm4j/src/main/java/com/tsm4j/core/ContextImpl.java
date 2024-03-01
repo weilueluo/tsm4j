@@ -1,19 +1,15 @@
-package com.tsm4j;
+package com.tsm4j.core.impl;
 
+import com.tsm4j.core.StateMachineId;
+import com.tsm4j.core.context.Context;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// state machine context information
-// add any metadata here
 @Getter
 @RequiredArgsConstructor
-public class Context {
-
+public class ContextImpl implements Context {
     private final LocalDateTime startTime = LocalDateTime.now();
-
-    @Getter
     private final StateMachineId stateMachineId;
-
 }

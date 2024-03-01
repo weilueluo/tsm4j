@@ -1,9 +1,9 @@
-package com.tsm4j;
+package com.tsm4j.core;
 
 
-import com.tsm4j.statetypes.Leaf;
-import com.tsm4j.statetypes.Output;
-import com.tsm4j.statetypes.Transition;
+import com.tsm4j.core.statetypes.Leaf;
+import com.tsm4j.core.statetypes.Output;
+import com.tsm4j.core.statetypes.Transition;
 
 public class StateTypes {
     public static final Transition TRANSITION = Transition.INSTANCE;
