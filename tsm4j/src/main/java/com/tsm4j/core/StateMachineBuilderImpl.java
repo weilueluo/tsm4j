@@ -1,16 +1,5 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.ExceptionHandler;
-import com.tsm4j.core.ExceptionHandlerWithContext;
-import com.tsm4j.core.LeafState;
-import com.tsm4j.core.Order;
-import com.tsm4j.core.State;
-import com.tsm4j.core.StateImpl;
-import com.tsm4j.core.StateMachine;
-import com.tsm4j.core.StateMachineBuilder;
-import com.tsm4j.core.StateMachineImpl;
-import com.tsm4j.core.Transition;
-import com.tsm4j.core.TransitionWithContext;
 import com.tsm4j.core.statetypes.StateType;
 import com.tsm4j.core.statetypes.AbstractStateType;
 import lombok.AccessLevel;
@@ -28,7 +17,7 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     private final StateMachine.Id stateMachineId;
     private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap = new HashMap<State<?>, List<TransitionWithContext<?>>>(){{
-        put(LeafState.INSTANCE, new ArrayList<>());  // leaf state should be present in all state machine by default, because state are checked to be presents in current state machine
+        put(StateLeaf.INSTANCE, new ArrayList<>());  // leaf state should be present in all state machine by default, because state are checked to be presents in current state machine
     }};
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
 

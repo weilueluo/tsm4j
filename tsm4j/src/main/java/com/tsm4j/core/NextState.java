@@ -4,7 +4,7 @@ package com.tsm4j.core;
 public interface NextState<T> {
 
     static NextState<Void> leaf() {
-        return LeafNextState.INSTANCE;
+        return NextStateLeaf.INSTANCE;
     }
 
     State<T> getState();

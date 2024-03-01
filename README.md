@@ -15,7 +15,7 @@ implementation 'com.tsm4j:tsm4j:0.0.2'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 

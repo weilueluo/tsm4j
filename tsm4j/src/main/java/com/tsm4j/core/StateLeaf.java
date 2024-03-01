@@ -6,9 +6,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class LeafState implements State<Void> {
+public class StateLeaf implements State<Void> {
 
-    public static final LeafState INSTANCE = new LeafState();
+    public static final StateLeaf INSTANCE = new StateLeaf();
 
     private static final String NAME = "LEAF_STATE";
 
@@ -19,13 +19,13 @@ public class LeafState implements State<Void> {
 
     @Override
     public NextState<Void> of(Void data) {
-        return LeafNextState.INSTANCE;
+        return NextStateLeaf.INSTANCE;
     }
 
     @Override
     public int compareTo(State<?> o) {
         if (o == null) {
-            return -1;  // push null to end
+            return -1;  // push null to end (for no reason)
         }
         return getId().compareTo(o.getId());
     }
@@ -56,9 +56,9 @@ public class LeafState implements State<Void> {
                 return 0;
             }
             if (o == null) {
-                return -1;  // push null to last
+                return -1;  // push null to end (for no reason)
             }
-            return 1;  // push it to second last
+            return 1;  // push leaf to end, but before null (for no reason)
         }
     }
 }

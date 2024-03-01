@@ -4,13 +4,13 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class LeafNextState implements NextState<Void> {
+public class NextStateLeaf implements NextState<Void> {
 
-    static final LeafNextState INSTANCE = new LeafNextState();
+    static final NextStateLeaf INSTANCE = new NextStateLeaf();
 
     @Override
     public State<Void> getState() {
-        return LeafState.INSTANCE;
+        return StateLeaf.INSTANCE;
     }
 
     @Override
