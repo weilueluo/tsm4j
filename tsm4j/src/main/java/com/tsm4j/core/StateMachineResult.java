@@ -1,4 +1,4 @@
-package com.tsm4j;
+package com.tsm4j.core;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,11 +16,11 @@ import java.util.stream.Collectors;
 public class StateMachineResult<O> {
 
     @Singular
-    private final List<LinkedList<NextStateImpl<?>>> outputPaths;
+    private final List<LinkedList<NextState<?>>> outputPaths;
     @Singular
-    private final List<LinkedList<NextStateImpl<?>>> leafPaths;
+    private final List<LinkedList<NextState<?>>> leafPaths;
     @Singular
-    private final List<LinkedList<NextStateImpl<?>>> implicitLeafPaths;
+    private final List<LinkedList<NextState<?>>> implicitLeafPaths;
 
     @SuppressWarnings("unchecked")  // ensured by state machine builder, result state T always has data T
     public List<O> getOutputs() {

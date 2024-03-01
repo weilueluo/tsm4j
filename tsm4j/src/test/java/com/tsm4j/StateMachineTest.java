@@ -1,5 +1,10 @@
 package com.tsm4j;
 
+import com.tsm4j.core.NextState;
+import com.tsm4j.core.State;
+import com.tsm4j.core.StateMachine;
+import com.tsm4j.core.StateMachineBuilder;
+import com.tsm4j.core.StateMachineResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,8 +28,8 @@ class StateMachineTest {
 
         // Define transitions
         // state1 (times 2) ----> state2 (plus 1) ----> state3 (to string)
-        builder.addTransition(state1, (i, c) -> state2.of(i * 2));
-        builder.addTransition(state2, (i, c) -> state3.of(String.valueOf(i + 1)));
+        builder.addTransition(state1, i -> state2.of(i * 2));
+        builder.addTransition(state2, i -> state3.of(String.valueOf(i + 1)));
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // Trigger state machine from state1

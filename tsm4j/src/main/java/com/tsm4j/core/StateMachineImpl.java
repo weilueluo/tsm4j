@@ -11,22 +11,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.function.Supplier;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE, staticName = "of")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 @Slf4j
-public class StateMachine<I, O> {
+public class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
     @EqualsAndHashCode.Include
-    private final StateMachineId id;
+    private final StateMachine.Id id;
+    private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap;
+    private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap;
 
-    private final Set<StateImpl<?>> states;
-    private final Map<Class<?>, ExceptionHandler<? extends RuntimeException>> exceptionHandlerMap;
+    @Override
+    public StateMachine.Id getId() {
+        return id;
+    }
 
-    public StateMachineResult<O> run(NextStateImpl<I> initState) {
+    @SuppressWarnings("rawtypes,unchecked")  // applying transition output is guaranteed to be type safe, enforced by state machine builder
+    public StateMachineResult<O> run(NextState<I> initState) {
         log.debug("[StateMachine={}] Starting", id);
 
         // setup
@@ -41,13 +44,14 @@ public class StateMachine<I, O> {
         while (!remainingStates.isEmpty()) {
 
             final RunningState<?> runningState = remainingStates.poll();
-            final StateImpl<?> currState = runningState.next.getState();
-            final List<Supplier<NextStateImpl<?>>> nextStateSuppliers = runningState.next.getOrderedNextStateSuppliers(context);
+            final State<?> currState = runningState.next.getState();
 
             log.trace("[StateMachine={}] Current state: {}", id, currState);
-            if (!states.contains(currState)) {  // sanity check
+            if (!stateToTransitionsMap.containsKey(currState)) {  // sanity check
                 throw new IllegalStateException(String.format("Next state not defined in this state machine, state=%s", currState));
             }
+
+            final List<TransitionWithContext<?>> currTransitions = stateToTransitionsMap.get(currState);
 
             if (currState.getId().getType().isLeaf()) {
                 log.trace("[StateMachine={}] Leaf: {}", id, currState);
@@ -58,15 +62,15 @@ public class StateMachine<I, O> {
                 log.trace("[StateMachine={}] Output: {}", id, currState);
                 resultBuilder.outputPath(runningState.complete());
 
-            } else if (nextStateSuppliers.isEmpty()) {
+            } else if (currTransitions.isEmpty()) {
                 log.trace("[StateMachine={}] Implicit Leaf: {}", id, currState);
                 resultBuilder.implicitLeafPath(runningState.complete());
                 continue;
             }
 
-            for (Supplier<NextStateImpl<?>> supplier : nextStateSuppliers) {
+            for (TransitionWithContext transition : currTransitions) {
                 try {
-                    NextStateImpl<?> nextState = supplier.get();
+                    NextState<?> nextState = (NextState<?>) transition.apply(runningState.next.getData(), context);
                     remainingStates.add(runningState.next(nextState));
                 } catch (RuntimeException e) {  // transition breaking from normal flow
                     handleException(e, runningState, remainingStates, context);
@@ -82,12 +86,12 @@ public class StateMachine<I, O> {
 
     // recursively handle exception from transition and exception from handlers themselves
     private <E extends RuntimeException> void handleException(E e, RunningState<?> runningState, PriorityQueue<RunningState<?>> remainingStates, ContextImpl context) {
-        Optional<ExceptionHandler<E>> handlerToUse = getClosestExceptionHandler(e.getClass());
+        Optional<ExceptionHandlerWithContext<E>> handlerToUse = getClosestExceptionHandler(e.getClass());
         if (!handlerToUse.isPresent()) {
             throw e;
         } else {
             try {
-                NextStateImpl<?> nextState = handlerToUse.get().apply(e, context);
+                NextState<?> nextState = handlerToUse.get().apply(e, context);
                 remainingStates.add(runningState.next(nextState));
             } catch (RuntimeException nestedException) {
                 if (nestedException == e) { // avoid infinite recursion
@@ -99,11 +103,11 @@ public class StateMachine<I, O> {
     }
 
     @SuppressWarnings("unchecked")
-    private <E extends RuntimeException> Optional<ExceptionHandler<E>> getClosestExceptionHandler(Class<?> clazz) {
+    private <E extends RuntimeException> Optional<ExceptionHandlerWithContext<E>> getClosestExceptionHandler(Class<?> clazz) {
         if (clazz == null) {
             return Optional.empty();
         } else if (exceptionHandlerMap.containsKey(clazz)) {
-            return Optional.ofNullable((ExceptionHandler<E>) exceptionHandlerMap.get(clazz));
+            return Optional.ofNullable((ExceptionHandlerWithContext<E>) exceptionHandlerMap.get(clazz));
         } else {
             return getClosestExceptionHandler(clazz.getSuperclass());
         }
@@ -112,19 +116,19 @@ public class StateMachine<I, O> {
 
     @RequiredArgsConstructor(staticName = "of", access = AccessLevel.PRIVATE)
     private static class RunningState<T> implements Comparable<RunningState<?>> {
-        private final NextStateImpl<T> next;
-        private final LinkedList<NextStateImpl<?>> history;
+        private final NextState<T> next;
+        private final LinkedList<NextState<?>> history;
 
-        static <R> RunningState<R> initial(NextStateImpl<R> nextState) {
+        static <R> RunningState<R> initial(NextState<R> nextState) {
             return new RunningState<>(nextState, new LinkedList<>());
         }
 
-        <R> RunningState<R> next(NextStateImpl<R> followingState) {
+        <R> RunningState<R> next(NextState<R> followingState) {
             return of(followingState, complete());
         }
 
-        LinkedList<NextStateImpl<?>> complete() {
-            final LinkedList<NextStateImpl<?>> allHistory = new LinkedList<>(this.history);
+        LinkedList<NextState<?>> complete() {
+            final LinkedList<NextState<?>> allHistory = new LinkedList<>(this.history);
             allHistory.add(next);
             return allHistory;
         }
@@ -135,4 +139,13 @@ public class StateMachine<I, O> {
         }
     }
 
+
+    @RequiredArgsConstructor
+    static class Id implements StateMachine.Id {
+        private final String name;
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
 }

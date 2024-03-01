@@ -1,9 +1,6 @@
 package com.tsm4j.core.statetypes;
 
-import lombok.EqualsAndHashCode;
-
-@EqualsAndHashCode
-public abstract class StateType {
+public abstract class AbstractStateType implements StateType {
     public boolean isTransition() {
         return false;
     }

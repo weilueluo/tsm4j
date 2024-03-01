@@ -9,7 +9,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 // represents a typical state that performs some operations
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Transition extends StateType {
+public class Transition extends AbstractStateType {
     public static final Transition INSTANCE = new Transition();
 
     @Override

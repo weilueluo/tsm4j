@@ -1,11 +1,6 @@
-package com.tsm4j.core.impl;
+package com.tsm4j.core;
 
-import com.tsm4j.core.OrderedTransition;
-import com.tsm4j.core.TransitionWithContext;
-import com.tsm4j.core.impl.ContextImpl;
-import com.tsm4j.core.impl.NextStateImpl;
-import com.tsm4j.core.state.State;
-import com.tsm4j.core.statetypes.StateType;
+import com.tsm4j.core.statetypes.AbstractStateType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,16 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 
 @Getter
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(staticName = "of", access = AccessLevel.PACKAGE)
-public class StateImpl<T> implements State<T> {
+class StateImpl<T> implements State<T> {
 
     @NonNull
     @ToString.Include
@@ -31,20 +24,13 @@ public class StateImpl<T> implements State<T> {
     private final Id id;
     private final List<OrderedTransition<T>> transitions = new ArrayList<>();
 
-    public NextStateImpl<T> of(T data) {
+    public NextState<T> of(T data) {
         return NextStateImpl.of(this, data);
     }
 
     // only state machine builder can modify this object, so package private
     void addTransition(TransitionWithContext<T> transition, int order) {
         this.transitions.add(new OrderedTransition<>(transition, order));
-    }
-
-    List<Supplier<NextStateImpl<?>>> getOrderedResultSupplier(T input, ContextImpl context) {
-        Collections.sort(this.transitions);
-        List<Supplier<NextStateImpl<?>>> suppliers = new ArrayList<>(this.transitions.size());
-        this.transitions.forEach(transition -> suppliers.add(() -> transition.getTransition().apply(input, context)));
-        return suppliers;
     }
 
     @Override
@@ -54,10 +40,11 @@ public class StateImpl<T> implements State<T> {
 
     @Getter
     @EqualsAndHashCode
+    @RequiredArgsConstructor
     public static class Id implements State.Id {
-        String name;
-        StateType type;
-        int order;
+        private final String name;
+        private final AbstractStateType type;
+        private final int order;
 
         @Override
         public int compareTo(State.Id o) {

@@ -1,57 +1,69 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetypes.StateTypeImpl;
-import com.tsm4j.core.statetypes.StateTypes;
+import com.tsm4j.core.ExceptionHandler;
+import com.tsm4j.core.ExceptionHandlerWithContext;
+import com.tsm4j.core.LeafState;
+import com.tsm4j.core.Order;
+import com.tsm4j.core.State;
+import com.tsm4j.core.StateImpl;
+import com.tsm4j.core.StateMachine;
+import com.tsm4j.core.StateMachineBuilder;
+import com.tsm4j.core.StateMachineImpl;
+import com.tsm4j.core.Transition;
+import com.tsm4j.core.TransitionWithContext;
+import com.tsm4j.core.statetypes.StateType;
+import com.tsm4j.core.statetypes.AbstractStateType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class StateMachineBuilder<I, O> {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
-    private final StateMachineId stateMachineId;
-    private final Set<StateImpl<?>> states = new HashSet<>(Collections.singletonList(NextStateImpl.leaf().getState()));
-    private final Map<Class<?>, ExceptionHandler<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
+    private final StateMachine.Id stateMachineId;
+    private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap = new HashMap<State<?>, List<TransitionWithContext<?>>>(){{
+        put(LeafState.INSTANCE, new ArrayList<>());  // leaf state should be present in all state machine by default, because state are checked to be presents in current state machine
+    }};
+    private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
 
-    public static <I, O> StateMachineBuilder<I, O> create(String name) {
-        return new StateMachineBuilder<>(StateMachineId.of(name));
-    }
-
-    public <T> StateImpl<T> newTransitionState(String name) {
+    @Override
+    public <T> State<T> newTransitionState(String name) {
         return this.newTransitionState(name, Order.DEFAULT_PRECEDENCE);
     }
 
-    public <T> StateImpl<T> newTransitionState(String name, int order) {
-        return this.newState(name, StateTypes.TRANSITION, order);
+    @Override
+    public <T> State<T> newTransitionState(String name, int order) {
+        return this.newState(name, StateType.TRANSITION, order);
     }
 
-    public StateImpl<O> newOutputState(String name, int order) {
-        return this.newState(name, StateTypes.OUTPUT, order);
+    public State<O> newOutputState(String name, int order) {
+        return this.newState(name, StateType.OUTPUT, order);
     }
 
-    public StateImpl<O> newOutputState(String name) {
+    public State<O> newOutputState(String name) {
         return this.newOutputState(name, Order.DEFAULT_PRECEDENCE);
     }
 
-    private <T> StateImpl<T> newState(String name, StateTypeImpl type, int order) {
+    private <T> State<T> newState(String name, AbstractStateType type, int order) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(type);
-        StateImpl<T> state = StateImpl.of(StateId.of(name, type, order));
-        if (this.states.add(state)) {
+        State<T> state = StateImpl.of(new StateImpl.Id(name, type, order));
+        if (!this.stateToTransitionsMap.containsKey(state)) {
+            this.stateToTransitionsMap.put(state, new ArrayList<>());
             return state;
         } else {
             throw new IllegalArgumentException(String.format("State already exists, state=%s", state.getId()));
         }
     }
 
-    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {
+    @Override
+    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandlerWithContext<E> exceptionHandler) {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(exceptionHandler);
         if (this.exceptionHandlerMap.containsKey(clazz)) {
@@ -60,28 +72,40 @@ public class StateMachineBuilder<I, O> {
         this.exceptionHandlerMap.put(clazz, exceptionHandler);
     }
 
-    public final <T> void addTransition(StateImpl<T> state, TransitionWithContext<T> transition, int order) {
+
+    @Override
+    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {
+        addExceptionHandler(clazz, (ExceptionHandlerWithContext<E>) exceptionHandler);
+    }
+
+
+    @Override
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order) {
         Objects.requireNonNull(state);
         Objects.requireNonNull(transition);
-        if (!this.states.contains(state)) {
+        if (!this.stateToTransitionsMap.containsKey(state)) {
             throw new IllegalArgumentException(String.format("State is not defined in this state machine, state=%s", state.getId()));
         }
-        state.addTransition(transition, order);
+        this.stateToTransitionsMap.get(state).add(transition);
     }
 
-    public <T> void addTransition(StateImpl<T> state, Transition<T> transition, int order) {
-       this.addTransition(state, (TransitionWithContext<T>) transition, order);
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition, int order) {
+        this.addTransition(state, (TransitionWithContext<T>) transition, order);
     }
 
-    public <T> void addTransition(StateImpl<T> state, TransitionWithContext<T> transition) {
+    @Override
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
         this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
     }
 
-    public <T> void addTransition(StateImpl<T> state, Transition<T> transition) {
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition) {
         this.addTransition(state, (TransitionWithContext<T>) transition, Order.DEFAULT_PRECEDENCE);
     }
 
+    @Override
     public StateMachine<I, O> build() {
-        return StateMachine.of(stateMachineId, states, exceptionHandlerMap);
+        return StateMachineImpl.of(stateMachineId, stateToTransitionsMap, exceptionHandlerMap);
     }
 }

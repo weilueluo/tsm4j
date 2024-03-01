@@ -1,7 +1,7 @@
-package com.tsm4j.core.impl;
+package com.tsm4j.core;
 
-import com.tsm4j.core.StateMachineId;
-import com.tsm4j.core.context.Context;
+import com.tsm4j.core.Context;
+import com.tsm4j.core.StateMachine;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @RequiredArgsConstructor
-public class ContextImpl implements Context {
+class ContextImpl implements Context {
     private final LocalDateTime startTime = LocalDateTime.now();
-    private final StateMachineId stateMachineId;
+    private final StateMachine.Id stateMachineId;
 }

@@ -8,7 +8,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Leaf extends StateType {
+public class Leaf extends AbstractStateType {
     public static final Leaf INSTANCE = new Leaf();
 
     @Override

@@ -6,18 +6,23 @@ Typed State Machine for Java
 ## Install
 
 ### Gradle
-```xml
+```
 implementation 'com.tsm4j:tsm4j:0.0.2'
 ```
 
 ### Maven
-```groovy
+```xml
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
     <version>0.0.2</version>
 </dependency>
 ```
+
+## Features
+- Type Safe
+- Functional
+- Easy to use
 
 ## Usage
 
@@ -38,9 +43,9 @@ public class Demo {
 
         // Define transitions
         // s1 multiply given integer by 2 and move to s2
-        builder.addTransition(s1, (inp, ctx) -> s2.of(inp * 2));
+        builder.addTransition(s1, i -> s2.of(i * 2));
         // s2 adds given integer by 1 and move to s3
-        builder.addTransition(s2, (inp, ctx) -> s3.of(String.valueOf(inp + 1)));
+        builder.addTransition(s2, i -> s3.of(String.valueOf(i + 1)));
 
         // Build and run
         StateMachine<Integer, String> stateMachine = builder.build();
