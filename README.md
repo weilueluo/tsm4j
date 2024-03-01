@@ -7,7 +7,7 @@ Typed State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.2'
+implementation 'com.tsm4j:tsm4j:0.0.3'
 ```
 
 ### Maven
@@ -29,15 +29,15 @@ implementation 'com.tsm4j:tsm4j:0.0.2'
 ```java
 public class Demo {
     public void demo() {
-        // create a state machine builder with Integer input and String output named demo
+        // creates a state machine builder with Integer input and String output named demo
         StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("demo");
 
         // define states
-        // s1 has Integer input with name "int 1"
+        // s1 has Integer input with the name "int 1"
         State<Integer> s1 = builder.newTransitionState("int 1");
-        // s2 has Integer input with name "int 2"
+        // s2 has Integer input with the name "int 2"
         State<Integer> s2 = builder.newTransitionState("int 2");
-        // s3 has String input with name "str"
+        // s3 has String input with the name "str"
         // it is an output state, so any value arrived at this state is considered as an output
         State<String> s3 = builder.newOutputState("str");
 
