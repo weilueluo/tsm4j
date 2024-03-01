@@ -1,5 +1,10 @@
 package com.tsm4j;
 
+import com.tsm4j.core.NextState;
+import com.tsm4j.core.State;
+import com.tsm4j.core.StateMachine;
+import com.tsm4j.core.StateMachineBuilder;
+import com.tsm4j.core.StateMachineResult;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -13,29 +18,36 @@ class StateMachineTest {
 
     @Test
     public void demo() {
-        // Create a state machine builder with input and output type
+        // create a state machine builder with Integer input and String output named demo
         StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("demo");
 
-        // Define states
-        State<Integer> state1 = builder.newTransitionState("int state 1");
-        State<Integer> state2 = builder.newTransitionState("int state 2");
-        State<String> state3 = builder.newOutputState("string output state");
+        // define states
+        // s1 has Integer input with name "int 1"
+        State<Integer> s1 = builder.newTransitionState("int 1");
+        // s2 has Integer input with name "int 2"
+        State<Integer> s2 = builder.newTransitionState("int 2");
+        // s3 has String input with name "str"
+        // it is an output state, so any value arrived at this state is considered as an output
+        State<String> s3 = builder.newOutputState("str");
 
-        // Define transitions
-        // state1 (times 2) ----> state2 (plus 1) ----> state3 (to string)
-        builder.addTransition(state1, (i, c) -> state2.of(i * 2));
-        builder.addTransition(state2, (i, c) -> state3.of(String.valueOf(i + 1)));
+        // define transitions
+        // state1 ----> state2 ----> state3 (to string)
+        builder.addTransition(s1, i -> s2.of(i * 2));
+        builder.addTransition(s2, i -> {
+            if (i > 5) {
+                return s3.of(String.valueOf(i + 1));
+            } else {
+                return s3.of(String.valueOf(i * 3));
+            }
+        });
+
         StateMachine<Integer, String> stateMachine = builder.build();
 
-        // Trigger state machine from state1
-        StateMachineResult<String> results1 = stateMachine.run(state1.of(2));
-        assertEquals(1, results1.getOutputs().size());
-        assertEquals("5", results1.getOutputs().get(0)); // we get 2 * 2 + 1 = 5
+        // trigger state machine from state1
+        assertEquals("6", stateMachine.run(s1.of(1)).getOutputs().get(0));  // 1 * 2 * 3 = 6
 
-        // Trigger state machine from state2
-        StateMachineResult<String> results2 = stateMachine.run(state2.of(2));
-        assertEquals(1, results2.getOutputs().size());
-        assertEquals("3", results2.getOutputs().get(0));  // we get 2 + 1 = 3
+        // trigger state machine from state2
+        assertEquals("7", stateMachine.run(s2.of(6)).getOutputs().get(0));  // 6 + 1 = 7
     }
 
     @Test
