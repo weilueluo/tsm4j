@@ -1,7 +1,7 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetypes.StateType;
 import com.tsm4j.core.statetypes.AbstractStateType;
+import com.tsm4j.core.statetypes.StateType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

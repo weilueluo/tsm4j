@@ -10,7 +10,9 @@ public interface State<T> extends Comparable<State<?>> {
 
     interface Id extends Comparable<Id> {
         String getName();
+
         AbstractStateType getType();
+
         int getOrder();
     }
 }

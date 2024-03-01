@@ -1,7 +1,7 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetypes.StateType;
 import com.tsm4j.core.statetypes.AbstractStateType;
+import com.tsm4j.core.statetypes.StateType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -15,8 +15,8 @@ import java.util.Objects;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
-    private final StateMachine.Id stateMachineId;
-    private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap = new HashMap<State<?>, List<TransitionWithContext<?>>>(){{
+    private final StateMachineId stateMachineId;
+    private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap = new HashMap<State<?>, List<TransitionWithContext<?>>>() {{
         put(StateLeaf.INSTANCE, new ArrayList<>());  // leaf state should be present in all state machine by default, because state are checked to be presents in current state machine
     }};
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
@@ -95,6 +95,6 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     @Override
     public StateMachine<I, O> build() {
-        return StateMachineImpl.of(stateMachineId, stateToTransitionsMap, exceptionHandlerMap);
+        return new StateMachineImpl<>(stateMachineId, stateToTransitionsMap, exceptionHandlerMap);
     }
 }

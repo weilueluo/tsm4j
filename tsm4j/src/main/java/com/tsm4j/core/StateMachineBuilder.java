@@ -4,7 +4,7 @@ package com.tsm4j.core;
 public interface StateMachineBuilder<I, O> {
 
     static <I, O> StateMachineBuilder<I, O> create(String name) {
-        return new StateMachineBuilderImpl<>(new StateMachineImpl.Id(name));
+        return new StateMachineBuilderImpl<>(new StateMachineIdImpl(name));
     }
 
     <T> State<T> newTransitionState(String name);

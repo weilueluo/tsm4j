@@ -7,9 +7,16 @@
    ```bash
     ./gradlew publishTsm4jPublicationToMavenRepository
    ```
-3. Navigate to `tsm4j/build/repos/releases` and run
+   > :note: If you see
+   > ```
+   > > Cannot perform signing task ':tsm4j:signTsm4jPublication' because it has no configured signatory
+   > ```
+   > This means you do not have the right settings in  `~/.gradle/gradle.properties`, i.e. `signing.keyId`, `signing.password`, and `signing.secretKeyRingFile`.
+   > For me, this probably means I am not running the command in my wsl2 ubuntu.
+3. Zip the release files
    ```bash
-   zip release.zip ./com/tsm4j/tsm4j/0.0.2/*
+   cd tsm4j/build/repos/releases
+   zip release.zip ./com/tsm4j/tsm4j/0.0.3/*
    ```
 4. Open https://central.sonatype.com/publishing
    1. sign in

@@ -1,31 +1,12 @@
 package com.tsm4j.core;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Singular;
-
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Getter
-@Builder
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class StateMachineResult<O> {
+public interface StateMachineResult<O> {
 
-    @Singular
-    private final List<LinkedList<NextState<?>>> outputPaths;
-    @Singular
-    private final List<LinkedList<NextState<?>>> leafPaths;
-    @Singular
-    private final List<LinkedList<NextState<?>>> implicitLeafPaths;
+    List<StateMachineResultPath<O>> getOutputPaths();
 
-    @SuppressWarnings("unchecked")  // ensured by state machine builder, result state T always has data T
-    public List<O> getOutputs() {
-        return this.outputPaths.stream()
-                .map(path -> (O) path.getLast().getData())
-                .collect(Collectors.toList());
-    }
+    List<StateMachineResultPath<?>> getLeafPaths();
+
+    List<O> getOutputs();
 }
