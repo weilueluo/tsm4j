@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.function.Supplier;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -20,7 +21,6 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
     @EqualsAndHashCode.Include
     private final StateMachineId id;
-    private final Map<State<?>, List<TransitionWithContext<?>>> stateToTransitionsMap;
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap;
 
     @Override
@@ -28,17 +28,17 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
         return id;
     }
 
-    @SuppressWarnings("rawtypes,unchecked")
+    @SuppressWarnings("unchecked")
     // applying transition output is guaranteed to be type safe, enforced by state machine builder
     public StateMachineResult<O> run(NextState<I> initState) {
-        log.debug("[StateMachine={}] Starting", id);
+        log.trace("[StateMachine={}] Started", id);
 
         // setup
         ContextImpl context = new ContextImpl(id);
         StateMachineResultImpl.StateMachineResultImplBuilder<O> resultBuilder = StateMachineResultImpl.builder();
 
-        // run state machine
-        PriorityQueue<RunningPath<?>> remainingStates = new PriorityQueue<>(); // descending queue
+        // run
+        PriorityQueue<RunningPath<?>> remainingStates = new PriorityQueue<>();
         remainingStates.add(RunningPath.initial(initState));
 
         log.trace("[StateMachine={}] Running graph", id);
@@ -48,11 +48,8 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
             final State<?> currState = runningPath.path.getOutputState().getState();
 
             log.trace("[StateMachine={}] Current state: {}", id, currState);
-            if (!stateToTransitionsMap.containsKey(currState)) {  // sanity check
-                throw new IllegalStateException(String.format("Next state not defined in this state machine, state=%s", currState));
-            }
 
-            final List<TransitionWithContext<?>> currTransitions = stateToTransitionsMap.get(currState);
+            final List<Supplier<NextStateImpl<?>>> currSuppliers = runningPath.path.getOutputState().applyTransitions(context);
 
             if (currState.getId().getType().isLeaf()) {
                 log.trace("[StateMachine={}] Leaf: {}", id, currState);
@@ -63,15 +60,15 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
                 log.trace("[StateMachine={}] Output: {}", id, currState);
                 resultBuilder.outputPath((StateMachineResultPath<O>) runningPath.complete());  // this cast is safe, enforced by builder
 
-            } else if (currTransitions.isEmpty()) {
+            } else if (currSuppliers.isEmpty()) {
                 log.trace("[StateMachine={}] Implicit Leaf: {}", id, currState);
                 resultBuilder.leafPath(runningPath.complete());
                 continue;
             }
 
-            for (TransitionWithContext transition : currTransitions) {
+            for (Supplier<NextStateImpl<?>> supplier : currSuppliers) {
                 try {
-                    NextState<?> nextState = (NextState<?>) transition.apply(runningPath.path.getOutputState().getData(), context);
+                    NextStateImpl<?> nextState = supplier.get();
                     remainingStates.add(runningPath.next(nextState));
                 } catch (RuntimeException e) {  // transition breaking from normal flow
                     handleException(e, runningPath, remainingStates, context);
@@ -81,7 +78,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
         StateMachineResult<O> result = resultBuilder.build();
 
-        log.debug("[StateMachine={}] Finished", id);
+        log.trace("[StateMachine={}] Finished", id);
         return result;
     }
 
@@ -92,7 +89,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
             throw e;
         } else {
             try {
-                NextState<?> nextState = handlerToUse.get().apply(e, context);
+                NextStateImpl<?> nextState = (NextStateImpl<?>) handlerToUse.get().apply(e, context);  // this cast is safe... as long as this is the only implementing class
                 remainingStates.add(runningPath.next(nextState));
             } catch (RuntimeException nestedException) {
                 if (nestedException == e) { // avoid infinite recursion
@@ -122,11 +119,11 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
         static <R> RunningPath<R> initial(NextState<R> nextState) {
             List<NextState<?>> states = new LinkedList<>();
             states.add(nextState);
-            StateMachineResultPathImpl<R> path = new StateMachineResultPathImpl<>(states, nextState);
+            StateMachineResultPathImpl<R> path = new StateMachineResultPathImpl<>(states, (NextStateImpl<R>) nextState);  // this cast is safe, we have only one implementing class
             return new RunningPath<>(path);
         }
 
-        <R> RunningPath<R> next(NextState<R> followingState) {
+        <R> RunningPath<R> next(NextStateImpl<R> followingState) {
             return new RunningPath<>(new StateMachineResultPathImpl<>(path, followingState));
         }
 

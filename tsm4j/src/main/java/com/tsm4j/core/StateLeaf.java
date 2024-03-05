@@ -2,24 +2,41 @@ package com.tsm4j.core;
 
 import com.tsm4j.core.statetypes.AbstractStateType;
 import com.tsm4j.core.statetypes.StateType;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class StateLeaf implements State<Void> {
+class StateLeaf extends StateImpl<Void> {
 
-    public static final StateLeaf INSTANCE = new StateLeaf();
+    public static final StateLeaf INSTANCE = new StateLeaf(Id.INSTANCE);
 
     private static final String NAME = "LEAF_STATE";
 
-    @Override
-    public State.Id getId() {
-        return Id.INSTANCE;
+    StateLeaf(StateImpl.@NonNull Id id) {
+        super(id);
     }
 
     @Override
     public NextState<Void> of(Void data) {
         return NextStateLeaf.INSTANCE;
+    }
+
+    @Override
+    public void addTransition(Transition<Void> transition) {
+        throw new UnsupportedOperationException("leaf state has no transition");
+    }
+
+    @Override
+    public void addTransition(TransitionWithContext<Void> transition) {
+        throw new UnsupportedOperationException("leaf state has no transition");
+    }
+
+    @Override
+    public void addTransition(Transition<Void> transition, int order) {
+        throw new UnsupportedOperationException("leaf state has no transition");
+    }
+
+    @Override
+    public void addTransition(TransitionWithContext<Void> transition, int order) {
+        throw new UnsupportedOperationException("leaf state has no transition");
     }
 
     @Override
@@ -30,35 +47,13 @@ public class StateLeaf implements State<Void> {
         return getId().compareTo(o.getId());
     }
 
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    private static final class Id implements State.Id {
+    private static final class Id extends StateImpl.Id {
 
-        private static final Id INSTANCE = new Id();
+        private static final Id INSTANCE = new Id(NAME, StateType.LEAF, Order.LOWEST_PRECEDENCE);
 
-        @Override
-        public String getName() {
-            return NAME;
-        }
 
-        @Override
-        public AbstractStateType getType() {
-            return StateType.LEAF;
-        }
-
-        @Override
-        public int getOrder() {
-            return Order.LOWEST_PRECEDENCE;
-        }
-
-        @Override
-        public int compareTo(State.Id o) {
-            if (this == o) {
-                return 0;
-            }
-            if (o == null) {
-                return -1;  // push null to end (for no reason)
-            }
-            return 1;  // push leaf to end, but before null (for no reason)
+        public Id(String name, AbstractStateType type, int order) {
+            super(name, type, order);
         }
     }
 }

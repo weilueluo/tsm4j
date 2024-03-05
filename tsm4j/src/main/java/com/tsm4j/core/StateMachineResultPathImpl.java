@@ -6,15 +6,15 @@ import java.util.List;
 class StateMachineResultPathImpl<O> implements StateMachineResultPath<O> {
 
     private final List<NextState<?>> path;
-    private final NextState<O> outputState;
+    private final NextStateImpl<O> outputState;
 
 
-    StateMachineResultPathImpl(List<NextState<?>> path, NextState<O> outputState) {
+    StateMachineResultPathImpl(List<NextState<?>> path, NextStateImpl<O> outputState) {
         this.path = path;
         this.outputState = outputState;
     }
 
-    StateMachineResultPathImpl(StateMachineResultPathImpl<?> other, NextState<O> outputState) {
+    StateMachineResultPathImpl(StateMachineResultPathImpl<?> other, NextStateImpl<O> outputState) {
         this.path = new LinkedList<>(other.path);
         this.path.add(outputState);
         this.outputState = outputState;
@@ -31,7 +31,7 @@ class StateMachineResultPathImpl<O> implements StateMachineResultPath<O> {
     }
 
     @Override
-    public NextState<O> getOutputState() {
+    public NextStateImpl<O> getOutputState() {
         return outputState;
     }
 }
