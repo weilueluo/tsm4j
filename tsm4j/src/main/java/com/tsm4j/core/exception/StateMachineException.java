@@ -1,4 +1,4 @@
-package com.tsm4j.utils;
+package com.tsm4j.core.exception;
 
 import lombok.experimental.StandardException;
 

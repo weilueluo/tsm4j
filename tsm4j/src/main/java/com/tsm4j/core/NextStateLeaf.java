@@ -1,20 +1,10 @@
 package com.tsm4j.core;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+class NextStateLeaf extends NextStateImpl<Void> {
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class NextStateLeaf implements NextState<Void> {
+    static final NextStateLeaf INSTANCE = new NextStateLeaf(StateLeaf.INSTANCE, null);
 
-    static final NextStateLeaf INSTANCE = new NextStateLeaf();
-
-    @Override
-    public State<Void> getState() {
-        return StateLeaf.INSTANCE;
-    }
-
-    @Override
-    public Void getData() {
-        return null;
+    protected NextStateLeaf(StateImpl<Void> state, Void data) {
+        super(state, data);
     }
 }

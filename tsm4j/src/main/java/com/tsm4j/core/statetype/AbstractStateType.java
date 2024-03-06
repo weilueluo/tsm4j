@@ -1,4 +1,4 @@
-package com.tsm4j.core.statetypes;
+package com.tsm4j.core.statetype;
 
 public abstract class AbstractStateType implements StateType {
     public boolean isTransition() {
