@@ -1,4 +1,4 @@
-package com.tsm4j.core.statetypes;
+package com.tsm4j.core.statetype;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -8,11 +8,11 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Leaf extends AbstractStateType {
-    public static final Leaf INSTANCE = new Leaf();
+public class Output extends AbstractStateType {
+    public static final Output INSTANCE = new Output();
 
     @Override
-    public boolean isLeaf() {
+    public boolean isOutput() {
         return true;
     }
 }

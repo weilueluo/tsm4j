@@ -1,7 +1,7 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetypes.AbstractStateType;
-import com.tsm4j.core.statetypes.StateType;
+import com.tsm4j.core.statetype.AbstractStateType;
+import com.tsm4j.core.statetype.StateType;
 import lombok.NonNull;
 
 class StateLeaf extends StateImpl<Void> {

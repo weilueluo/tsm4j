@@ -31,7 +31,7 @@ class StateMachineTest {
         State<String> s3 = builder.newOutputState("s3");
 
         // define transitions
-        // s1 ----> s2 ----> s3
+        // s1 --> s2 --> s3
         s1.addTransition(i -> s2.of(i * 2));
         s2.addTransition(i -> {
             if (i > 5) {

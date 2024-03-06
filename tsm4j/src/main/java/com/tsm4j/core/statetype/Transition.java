@@ -1,4 +1,4 @@
-package com.tsm4j.core.statetypes;
+package com.tsm4j.core.statetype;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -7,12 +7,13 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode(callSuper = true)
+// represents a typical state that performs some operations
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Output extends AbstractStateType {
-    public static final Output INSTANCE = new Output();
+public class Transition extends AbstractStateType {
+    public static final Transition INSTANCE = new Transition();
 
     @Override
-    public boolean isOutput() {
+    public boolean isTransition() {
         return true;
     }
 }

@@ -1,6 +1,6 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetypes.AbstractStateType;
+import com.tsm4j.core.statetype.AbstractStateType;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
