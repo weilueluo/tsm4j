@@ -7,7 +7,7 @@ Typed State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.4'
+implementation 'com.tsm4j:tsm4j:0.0.5'
 ```
 
 ### Maven
@@ -15,14 +15,14 @@ implementation 'com.tsm4j:tsm4j:0.0.4'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 </dependency>
 ```
 
 ## Features
-- Type Safe
 - Functional
 - Easy to use
+- Type safe transition
 
 ## Usage
 
@@ -64,6 +64,9 @@ public class Demo {
 ```
 
 For more usage examples see tests.
+
+## Notes
+- It is actually more like a graph runner at the moment...
 
 ## Contributing
 Feel free to open up an issue for feature request or bug report.
