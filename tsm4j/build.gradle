@@ -28,7 +28,7 @@ java {
 
 group = 'com.tsm4j'
 archivesBaseName = 'tsm4j'
-version = '0.0.4'
+version = '0.0.5'
 
 
 publishing {
@@ -83,6 +83,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
     testImplementation 'org.assertj:assertj-core:3.25.1'
 
+}
+
+publishTsm4jPublicationToMavenRepository {
+    dependsOn test
 }
 
 tasks.named('test') {
