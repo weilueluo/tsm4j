@@ -85,6 +85,10 @@ dependencies {
 
 }
 
+publishTsm4jPublicationToMavenRepository {
+    dependsOn test
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
