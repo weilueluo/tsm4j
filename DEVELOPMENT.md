@@ -2,7 +2,7 @@
 
 ## Publish New Version
 
-1. Update new version in `tsm4j/build.gradle`
+1. Update new version in `tsm4j/build.gradle` and `README.md`
 2. Create a new version locally
    ```bash
     ./gradlew publishTsm4jPublicationToMavenRepository

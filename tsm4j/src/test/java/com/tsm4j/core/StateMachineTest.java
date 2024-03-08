@@ -29,8 +29,8 @@ class StateMachineTest {
 
         // define transitions
         // s1 --> s2 --> s3
-        s1.addTransition(i -> s2.of(i * 2));
-        s2.addTransition(i -> {
+        builder.addTransition(s1, i -> s2.of(i * 2));
+        builder.addTransition(s2, i -> {
             if (i > 5) {
                 return s3.of(String.valueOf(i + 1));
             } else {
@@ -57,8 +57,8 @@ class StateMachineTest {
         State<String> state3 = builder.newOutputState("stringState");
 
         // define transitions
-        state1.addTransition((i, c) -> state2.of(i * 2));
-        state2.addTransition((i, c) -> state3.of(String.valueOf(i + 1)));
+        builder.addTransition(state1, (i, c) -> state2.of(i * 2));
+        builder.addTransition(state2, (i, c) -> state3.of(String.valueOf(i + 1)));
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger from state1
@@ -81,23 +81,23 @@ class StateMachineTest {
 
         // define transitions
         final List<Integer> outputs = new ArrayList<>();
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             outputs.add(5);
             return NextState.leaf();
         }, 5);
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             outputs.add(4);
             return NextState.leaf();
         }, 4);
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             outputs.add(1);
             return NextState.leaf();
         }, 1);
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             outputs.add(3);
             return NextState.leaf();
         }, 3);
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             outputs.add(2);
             return NextState.leaf();
         }, 2);
@@ -120,11 +120,11 @@ class StateMachineTest {
         State<Integer> state5 = builder.newOutputState("intState5", 5);
 
         // define transitions
-        state0.addTransition((i, c) -> state3.of(3));
-        state0.addTransition((i, c) -> state4.of(4));
-        state0.addTransition((i, c) -> state1.of(1));
-        state0.addTransition((i, c) -> state2.of(2));
-        state0.addTransition((i, c) -> state5.of(5));
+        builder.addTransition(state0, (i, c) -> state3.of(3));
+        builder.addTransition(state0, (i, c) -> state4.of(4));
+        builder.addTransition(state0, (i, c) -> state1.of(1));
+        builder.addTransition(state0, (i, c) -> state2.of(2));
+        builder.addTransition(state0, (i, c) -> state5.of(5));
         StateMachine<Integer, Integer> stateMachine = builder.build();
 
         List<Integer> outputs = stateMachine.run(state0.of(0)).getOutputs();
@@ -142,9 +142,9 @@ class StateMachineTest {
         State<String> state4 = builder.newOutputState("stringState2");
 
         // define transitions
-        state1.addTransition((i, c) -> state2.of(i * 2));
-        state2.addTransition((i, c) -> state3.of(String.valueOf(i + 1)));
-        state2.addTransition((i, c) -> state4.of(String.valueOf(i + 2)));
+        builder.addTransition(state1, (i, c) -> state2.of(i * 2));
+        builder.addTransition(state2, (i, c) -> state3.of(String.valueOf(i + 1)));
+        builder.addTransition(state2, (i, c) -> state4.of(String.valueOf(i + 2)));
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger from state1
@@ -163,8 +163,8 @@ class StateMachineTest {
         State<String> state3 = builder.newOutputState("stringState1");
 
         // define transitions
-        state1.addTransition((i, c) -> state2.of(i + 1));
-        state2.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> state2.of(i + 1));
+        builder.addTransition(state2, (i, c) -> {
             if (i < 10) {
                 return state1.of(i);
             } else {
@@ -189,7 +189,7 @@ class StateMachineTest {
         State<String> state2 = builder.newOutputState("intState2");
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             throw new RuntimeException("state1 transition to error, intentional exception");
         });
 
@@ -213,7 +213,7 @@ class StateMachineTest {
         State<String> state2 = builder.newOutputState("intState2");
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             throw new RuntimeException("state1 transition to error, intentional exception");
         });
 
@@ -239,7 +239,7 @@ class StateMachineTest {
         State<Integer> state1 = builder.newTransitionState("intState1");
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             throw new RuntimeException("state1 transition to error, intentional exception");
         });
 
@@ -263,7 +263,7 @@ class StateMachineTest {
         State<String> state2 = builder.newOutputState("intState2");
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             throw new IllegalStateException("state1 transition to error, intentional exception");  // IllegalStateException is subclass of RuntimeException
         });
 
@@ -288,8 +288,8 @@ class StateMachineTest {
 
 
         // define transitions
-        state1.addTransition((i, c) -> state2.of(i));
-        state2.addTransition((i, c) -> NextState.leaf());
+        builder.addTransition(state1, (i, c) -> state2.of(i));
+        builder.addTransition(state2, (i, c) -> NextState.leaf());
 
         StateMachine<Integer, String> stateMachine = builder.build();
 
@@ -308,7 +308,7 @@ class StateMachineTest {
 
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             if (i > 10) {
                 return state2.of("done");
             }
@@ -316,7 +316,7 @@ class StateMachineTest {
             return state1.of(i + 1);
         });
 
-        state2.addTransition((i, c) -> {
+        builder.addTransition(state2, (i, c) -> {
             for (int j = 0; j <= 10; j++) {
                 Optional<String> cacheItem = c.get(String.valueOf(j), String.class);
                 assertTrue(cacheItem.isPresent());
@@ -342,12 +342,12 @@ class StateMachineTest {
 
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             c.set("cache item");
             return state2.of(i);
         });
 
-        state2.addTransition((i, c) -> {
+        builder.addTransition(state2, (i, c) -> {
             Optional<String> cacheItem = c.get(String.class);
             assertTrue(cacheItem.isPresent());
             assertThat(cacheItem.get()).isEqualTo("cache item");
@@ -371,12 +371,12 @@ class StateMachineTest {
 
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             c.set("cache item");
             return state2.of(i);
         });
 
-        state2.addTransition((i, c) -> {
+        builder.addTransition(state2, (i, c) -> {
             String cacheItem = c.getOrError(String.class);
             assertThat(cacheItem).isEqualTo("cache item");
             return NextState.leaf();
@@ -399,12 +399,12 @@ class StateMachineTest {
 
 
         // define transitions
-        state1.addTransition((i, c) -> {
+        builder.addTransition(state1, (i, c) -> {
             c.set("cache item");
             return state2.of(i);
         });
 
-        state2.addTransition((i, c) -> {
+        builder.addTransition(state2, (i, c) -> {
             String cacheItem = c.getOrDefault(String.class, null);
             assertThat(cacheItem).isEqualTo("cache item");
 

@@ -19,5 +19,13 @@ public interface StateMachineBuilder<I, O> {
 
     <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler);
 
+    <T> void addTransition(State<T> state, Transition<T> transition);
+
+    <T> void addTransition(State<T> state, TransitionWithContext<T> transition);
+
+    <T> void addTransition(State<T> state, Transition<T> transition, int order);
+
+    <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order);
+
     StateMachine<I, O> build();
 }

@@ -31,26 +31,22 @@ class StateImpl<T> implements State<T> {
         return NextStateImpl.of(this, data);
     }
 
-    @Override
-    public void addTransition(Transition<T> transition) {
+    void addTransition(Transition<T> transition) {
         this.sorted = false;
         this.addTransition(transition, Order.DEFAULT_PRECEDENCE);
     }
 
-    @Override
-    public void addTransition(TransitionWithContext<T> transition) {
+    void addTransition(TransitionWithContext<T> transition) {
         this.sorted = false;
         this.addTransition(transition, Order.DEFAULT_PRECEDENCE);
     }
 
-    @Override
-    public void addTransition(Transition<T> transition, int order) {
+    void addTransition(Transition<T> transition, int order) {
         this.sorted = false;
         this.transitions.add(new OrderedTransition<>(transition, order));
     }
 
-    @Override
-    public void addTransition(TransitionWithContext<T> transition, int order) {
+    void addTransition(TransitionWithContext<T> transition, int order) {
         this.sorted = false;
         this.transitions.add(new OrderedTransition<>(transition, order));
 
