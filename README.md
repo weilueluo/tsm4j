@@ -7,7 +7,7 @@ Typed State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.5'
+implementation 'com.tsm4j:tsm4j:0.0.6'
 ```
 
 ### Maven
@@ -15,7 +15,7 @@ implementation 'com.tsm4j:tsm4j:0.0.5'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 
@@ -43,8 +43,8 @@ public class Demo {
 
         // define transitions
         // s1 --> s2 --> s3
-        s1.addTransition(i -> s2.of(i * 2));
-        s2.addTransition(i -> {
+        builder.addTransition(s1, i -> s2.of(i * 2));
+        builder.addTransition(s2, i -> {
             if (i > 5) {
                 return s3.of(String.valueOf(i + 1));
             } else {

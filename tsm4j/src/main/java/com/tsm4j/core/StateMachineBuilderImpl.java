@@ -51,6 +51,22 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
         this.exceptionHandlerMap.put(clazz, exceptionHandler);
     }
 
+    public <T> void addTransition(State<T> state, Transition<T> transition) {
+        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+    }
+
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
+        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+    }
+
+    public <T> void addTransition(State<T> state, Transition<T> transition, int order) {
+        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
+    }
+
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order) {
+        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
+    }
+
 
     @Override
     public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {

@@ -28,7 +28,7 @@ java {
 
 group = 'com.tsm4j'
 archivesBaseName = 'tsm4j'
-version = '0.0.5'
+version = '0.0.6'
 
 
 publishing {
