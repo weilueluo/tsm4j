@@ -29,31 +29,13 @@ class StateLeaf extends StateImpl<Void> {
         throw new UnsupportedOperationException("leaf state has no transition");
     }
 
-    @Override
-    public void addTransition(Transition<Void> transition, int order) {
-        throw new UnsupportedOperationException("leaf state has no transition");
-    }
-
-    @Override
-    public void addTransition(TransitionWithContext<Void> transition, int order) {
-        throw new UnsupportedOperationException("leaf state has no transition");
-    }
-
-    @Override
-    public int compareTo(State<?> o) {
-        if (o == null) {
-            return -1;  // push null to end (for no reason)
-        }
-        return getId().compareTo(o.getId());
-    }
-
     private static final class Id extends StateImpl.Id {
 
-        private static final Id INSTANCE = new Id(NAME, StateType.LEAF, Order.LOWEST_PRECEDENCE);
+        private static final Id INSTANCE = new Id(NAME, StateType.LEAF);
 
 
-        public Id(String name, AbstractStateType type, int order) {
-            super(name, type, order);
+        public Id(String name, AbstractStateType type) {
+            super(name, type);
         }
     }
 }

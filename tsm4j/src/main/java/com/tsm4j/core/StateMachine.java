@@ -4,6 +4,6 @@ public interface StateMachine<I, O> {
 
     StateMachineId getId();
 
-    StateMachineResult<O> run(NextState<I> initState);
+    StateMachineResult<O> send(NextState<I> initState);
 
 }

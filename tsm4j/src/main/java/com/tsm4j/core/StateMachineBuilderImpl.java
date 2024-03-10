@@ -19,26 +19,17 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     @Override
     public <T> State<T> newTransitionState(String name) {
-        return this.newTransitionState(name, Order.DEFAULT_PRECEDENCE);
-    }
-
-    @Override
-    public <T> State<T> newTransitionState(String name, int order) {
-        return this.newState(name, StateType.TRANSITION, order);
-    }
-
-    public State<O> newOutputState(String name, int order) {
-        return this.newState(name, StateType.OUTPUT, order);
+        return this.newState(name, StateType.TRANSITION);
     }
 
     public State<O> newOutputState(String name) {
-        return this.newOutputState(name, Order.DEFAULT_PRECEDENCE);
+        return this.newState(name, StateType.OUTPUT);
     }
 
-    private <T> State<T> newState(String name, AbstractStateType type, int order) {
+    private <T> State<T> newState(String name, AbstractStateType type) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(type);
-        return new StateImpl<>(new StateImpl.Id(name, type, order));
+        return new StateImpl<>(new StateImpl.Id(name, type));
     }
 
     @Override
@@ -52,21 +43,12 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
     }
 
     public <T> void addTransition(State<T> state, Transition<T> transition) {
-        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+        ((StateImpl<T>) state).addTransition(transition);  // this cast is safe because we have only one implementing class
     }
 
     public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
-        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+        ((StateImpl<T>) state).addTransition(transition);  // this cast is safe because we have only one implementing class
     }
-
-    public <T> void addTransition(State<T> state, Transition<T> transition, int order) {
-        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
-    }
-
-    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order) {
-        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
-    }
-
 
     @Override
     public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {

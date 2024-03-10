@@ -9,10 +9,6 @@ public interface StateMachineBuilder<I, O> {
 
     <T> State<T> newTransitionState(String name);
 
-    <T> State<T> newTransitionState(String name, int order);
-
-    State<O> newOutputState(String name, int order);
-
     State<O> newOutputState(String name);
 
     <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandlerWithContext<E> exceptionHandler);
@@ -22,10 +18,6 @@ public interface StateMachineBuilder<I, O> {
     <T> void addTransition(State<T> state, Transition<T> transition);
 
     <T> void addTransition(State<T> state, TransitionWithContext<T> transition);
-
-    <T> void addTransition(State<T> state, Transition<T> transition, int order);
-
-    <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order);
 
     StateMachine<I, O> build();
 }

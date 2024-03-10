@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
 import java.util.function.Supplier;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -30,7 +29,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
     @SuppressWarnings("unchecked")
     // applying transition output is guaranteed to be type safe, enforced by state machine builder
-    public StateMachineResult<O> run(NextState<I> initState) {
+    public StateMachineResult<O> send(NextState<I> initState) {
         log.trace("[StateMachine={}] Started", id);
 
         // setup
@@ -38,7 +37,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
         StateMachineResultImpl.StateMachineResultImplBuilder<O> resultBuilder = StateMachineResultImpl.builder();
 
         // run
-        PriorityQueue<RunningPath<?>> remainingStates = new PriorityQueue<>();
+        LinkedList<RunningPath<?>> remainingStates = new LinkedList<>();
         remainingStates.add(RunningPath.initial(initState));
 
         log.trace("[StateMachine={}] Running graph", id);
@@ -83,7 +82,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
     }
 
     // recursively handle exception from transition and exception from handlers themselves
-    private <E extends RuntimeException> void handleException(E e, RunningPath<?> runningPath, PriorityQueue<RunningPath<?>> remainingStates, ContextImpl context) {
+    private <E extends RuntimeException> void handleException(E e, RunningPath<?> runningPath, LinkedList<RunningPath<?>> remainingStates, ContextImpl context) {
         Optional<ExceptionHandlerWithContext<E>> handlerToUse = getClosestExceptionHandler(e.getClass());
         if (!handlerToUse.isPresent()) {
             throw e;
@@ -113,7 +112,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    private static class RunningPath<T> implements Comparable<RunningPath<?>> {
+    private static class RunningPath<T> {
         private final StateMachineResultPathImpl<T> path;
 
         static <R> RunningPath<R> initial(NextState<R> nextState) {
@@ -129,11 +128,6 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
         StateMachineResultPath<T> complete() {
             return path;
-        }
-
-        @Override
-        public int compareTo(RunningPath<?> o) {
-            return this.path.getOutputState().getState().compareTo(o.path.getOutputState().getState());
         }
     }
 }

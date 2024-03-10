@@ -2,8 +2,6 @@ package com.tsm4j.core;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,10 +39,10 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger state machine from s1
-        assertEquals("6", stateMachine.run(s1.of(1)).getOutputs().get(0));  // 1 * 2 * 3 = 6
+        assertEquals("6", stateMachine.send(s1.of(1)).getOutputs().get(0));  // 1 * 2 * 3 = 6
 
         // trigger state machine from s2
-        assertEquals("7", stateMachine.run(s2.of(6)).getOutputs().get(0));  // 6 + 1 = 7
+        assertEquals("7", stateMachine.send(s2.of(6)).getOutputs().get(0));  // 6 + 1 = 7
     }
 
     @Test
@@ -62,73 +60,14 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger from state1
-        StateMachineResult<String> results1 = stateMachine.run(state1.of(2));
+        StateMachineResult<String> results1 = stateMachine.send(state1.of(2));
         assertEquals(1, results1.getOutputs().size());
         assertEquals("5", results1.getOutputs().get(0));
 
         // trigger from state2
-        StateMachineResult<String> results2 = stateMachine.run(state2.of(2));
+        StateMachineResult<String> results2 = stateMachine.send(state2.of(2));
         assertEquals(1, results2.getOutputs().size());
         assertEquals("3", results2.getOutputs().get(0));
-    }
-
-    @Test
-    public void testTransitionOrder() {
-        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
-
-        // define states
-        State<Integer> state1 = builder.newTransitionState("intState1");
-
-        // define transitions
-        final List<Integer> outputs = new ArrayList<>();
-        builder.addTransition(state1, (i, c) -> {
-            outputs.add(5);
-            return NextState.leaf();
-        }, 5);
-        builder.addTransition(state1, (i, c) -> {
-            outputs.add(4);
-            return NextState.leaf();
-        }, 4);
-        builder.addTransition(state1, (i, c) -> {
-            outputs.add(1);
-            return NextState.leaf();
-        }, 1);
-        builder.addTransition(state1, (i, c) -> {
-            outputs.add(3);
-            return NextState.leaf();
-        }, 3);
-        builder.addTransition(state1, (i, c) -> {
-            outputs.add(2);
-            return NextState.leaf();
-        }, 2);
-        StateMachine<Integer, String> stateMachine = builder.build();
-
-        stateMachine.run(state1.of(0));
-        assertThat(outputs).contains(5, 4, 3, 2, 1);
-    }
-
-    @Test
-    public void testStateOrder() {
-        StateMachineBuilder<Integer, Integer> builder = StateMachineBuilder.create("test");
-
-        // define states
-        State<Integer> state0 = builder.newTransitionState("intState0");
-        State<Integer> state1 = builder.newOutputState("intState1", 1);
-        State<Integer> state2 = builder.newOutputState("intState2", 2);
-        State<Integer> state3 = builder.newOutputState("intState3", 3);
-        State<Integer> state4 = builder.newOutputState("intState4", 4);
-        State<Integer> state5 = builder.newOutputState("intState5", 5);
-
-        // define transitions
-        builder.addTransition(state0, (i, c) -> state3.of(3));
-        builder.addTransition(state0, (i, c) -> state4.of(4));
-        builder.addTransition(state0, (i, c) -> state1.of(1));
-        builder.addTransition(state0, (i, c) -> state2.of(2));
-        builder.addTransition(state0, (i, c) -> state5.of(5));
-        StateMachine<Integer, Integer> stateMachine = builder.build();
-
-        List<Integer> outputs = stateMachine.run(state0.of(0)).getOutputs();
-        assertThat(outputs).contains(5, 4, 3, 2, 1);
     }
 
     @Test
@@ -148,7 +87,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger from state1
-        StateMachineResult<String> results = stateMachine.run(state1.of(2));
+        StateMachineResult<String> results = stateMachine.send(state1.of(2));
         assertEquals(2, results.getOutputs().size());
         assertThat(results.getOutputs()).containsExactlyInAnyOrder("5", "6");
     }
@@ -174,7 +113,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // trigger from state1
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(1, results.getOutputs().size());
         assertEquals("11", results.getOutputs().get(0));
 
@@ -199,7 +138,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(123));
+        StateMachineResult<String> results = stateMachine.send(state1.of(123));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
@@ -226,7 +165,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(123));
+        StateMachineResult<String> results = stateMachine.send(state1.of(123));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
@@ -251,7 +190,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        assertThrows(RuntimeException.class, () -> stateMachine.run(state1.of(123)), "state1 transition to error, intentional exception");
+        assertThrows(RuntimeException.class, () -> stateMachine.send(state1.of(123)), "state1 transition to error, intentional exception");
     }
 
     @Test
@@ -273,7 +212,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(123));
+        StateMachineResult<String> results = stateMachine.send(state1.of(123));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
@@ -294,7 +233,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 
@@ -328,7 +267,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 
@@ -357,7 +296,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 
@@ -385,7 +324,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 
@@ -417,7 +356,7 @@ class StateMachineTest {
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        StateMachineResult<String> results = stateMachine.run(state1.of(0));
+        StateMachineResult<String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 }
