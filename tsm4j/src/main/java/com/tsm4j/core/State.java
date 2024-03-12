@@ -1,16 +1,13 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetype.AbstractStateType;
-
 public interface State<T> {
-
-    Id getId();
+    String getName();
 
     NextState<T> of(T data);
 
-    interface Id {
-        String getName();
+    boolean isInput();
 
-        AbstractStateType getType();
-    }
+    boolean isOutput();
+
+    boolean isLeaf();
 }

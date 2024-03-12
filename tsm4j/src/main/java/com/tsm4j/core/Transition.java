@@ -4,7 +4,7 @@ package com.tsm4j.core;
 public interface Transition<T> extends TransitionWithContext<T> {
 
     @Override
-    default NextState<?> apply(T t, Context context) {
+    default NextState<?> apply(T t, ExecutionContext context) {
         return apply(t);
     }
 
