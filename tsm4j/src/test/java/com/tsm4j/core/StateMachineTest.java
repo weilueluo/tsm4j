@@ -2,10 +2,11 @@ package com.tsm4j.core;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StateMachineTest {
 
@@ -73,53 +74,36 @@ class StateMachineTest {
 
     @Test
     public void testRequiredState() {
-        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
+        StateMachineBuilder<Void, Integer> builder = StateMachineBuilder.create("test");
 
         // define states
-        State<Integer> state1 = builder.addState("intState1");
-        State<Integer> state2 = builder.addState("intState2");
-        State<Integer> state3 = builder.addState("intState3", state2);  // state3 depends on state2
+        State<Integer> out = builder.addOutputState("out");
 
-        State<String> state4 = builder.addOutputState("out", state2);
+        State<Void> in = builder.addInputState("in");
+        State<Void> s2 = builder.addState("s2");
+        State<Void> s3 = builder.addState("s3");
+        State<Void> s4 = builder.addState("s4");
+        State<Void> s5 = builder.addState("s5", Collections.singleton(out));  // s5 can only run when there is an output
+        State<Void> s6 = builder.addState("s6");
 
-        // define transitions
-        builder.addTransition(state1, (i) ->  state3.of(1));
-        builder.addTransition(state1, (i) ->  state2.of(1));
-
-        builder.addTransition(state3, (i) -> state4.of("3->4"));
-        builder.addTransition(state2, (i) -> state4.of("2->4"));
-
-        StateMachine<Integer, String> stateMachine = builder.build();
-
-        // trigger from state1
-        Execution<Integer, String> result = stateMachine.send(state1.of(1));
-        assertThat(result.getOutputs()).containsExactly("2->4", "3->4");
-    }
-
-    @Test
-    public void testRequiredState2() {
-        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
-
-        // define states
-        State<Integer> state1 = builder.addState("intState1");
-        State<Integer> state2 = builder.addState("intState2");
-        State<Integer> state5 = builder.addState("intState5");
-        State<Integer> state3 = builder.addState("intState3", state5);  // state3 depends on state5
-
-        State<String> state4 = builder.addOutputState("out", state2);
 
         // define transitions
-        builder.addTransition(state1, (i) ->  state3.of(1));
-        builder.addTransition(state1, (i) ->  state2.of(1));
+        builder.addTransition(in, (i) -> s5.of(null));
+        builder.addTransition(s5, (i) -> s6.of(null));
+        builder.addTransition(s6, (i) -> out.of(2));
 
-        builder.addTransition(state3, (i) -> state4.of("3->4"));
-        builder.addTransition(state2, (i) -> state4.of("2->4"));
+        builder.addTransition(in, (i) -> s2.of(null));
+        builder.addTransition(s2, (i) -> s3.of(null));
+        builder.addTransition(s3, (i) -> s4.of(null));
+        builder.addTransition(s4, (i) -> out.of(1));
 
-        StateMachine<Integer, String> stateMachine = builder.build();
+
+        StateMachine<Void, Integer> stateMachine = builder.build();
 
         // trigger from state1
-        Execution<Integer, String> result = stateMachine.send(state1.of(1));
-        assertThat(result.getOutputs()).containsExactly("2->4");  // no "3->4" output because condition not satisfied
+        Execution<Void, Integer> result = stateMachine.send(in.of(null));
+        System.out.println(result.getOutputs());
+        assertThat(result.getOutputs()).containsExactly(1, 2);
     }
 
     @Test

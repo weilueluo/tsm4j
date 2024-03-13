@@ -3,6 +3,7 @@ package com.tsm4j.core;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,26 +22,36 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     @Override
     public <T> State<T> addState(String name) {
-        return this.addState(name, false, false);
+        return addState(name, Collections.emptySet());
+    }
+
+    @Override
+    public <T> State<T> addState(String name, Set<State<?>> requiredStates) {
+        return this.addState(name, false, false, requiredStates);
     }
 
     @Override
     public State<I> addInputState(String name) {
-        final State<I> state = this.addState(name, true, false);
+        final State<I> state = this.addState(name, true, false, Collections.emptySet());
         this.inputStates.add(state);
         return state;
     }
 
     @Override
     public State<O> addOutputState(String name) {
-        final State<O> state = this.addState(name, false, true);
+        return addOutputState(name, Collections.emptySet());
+    }
+
+    @Override
+    public State<O> addOutputState(String name, Set<State<?>> requiredStates) {
+        final State<O> state = this.addState(name, false, true, requiredStates);
         this.outputStates.add(state);
         return state;
     }
 
-    private <T> State<T> addState(String name, boolean isInput, boolean isOutput, State<?>... states) {
+    private <T> State<T> addState(String name, boolean isInput, boolean isOutput, Set<State<?>> requiredStates) {
         Objects.requireNonNull(name);
-        final State<T> state = new StateImpl<>(name, isInput, isOutput, new Requirements(states));
+        final State<T> state = new StateImpl<>(name, isInput, isOutput, requiredStates);
         if (this.states.contains(state)) {
             throw new IllegalArgumentException("State already exists, state=" + state);
         }

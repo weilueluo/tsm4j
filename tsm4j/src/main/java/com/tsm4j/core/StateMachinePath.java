@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 /*
@@ -15,10 +15,9 @@ import java.util.Optional;
 @Getter
 class StateMachinePath<T, I, O> {
 
+    private final T data;
     private final ArrayList<State<?>> path;
     private final StateImpl<T> state;
-    private final T data;
-    private boolean executed;
 
     StateMachinePath(@NonNull ArrayList<State<?>> prevStates, @NonNull StateImpl<T> newState, T data) {
         this.state = newState;
@@ -39,53 +38,19 @@ class StateMachinePath<T, I, O> {
         return this.state.isLeaf();
     }
 
-    PathExecutionResult<I, O> tryExecute(ExecutionContextImpl<I, O> executionContext) {
-        boolean runHooks = false;
-        if (!this.executed) {  // if passed the execute check before, then allow it for subsequent runs
-            if (this.canExecute(executionContext)) {
-                runHooks = true;  // run hooks only if first time execute
-                this.executed = true;
-            } else {
-                // cant execute yet, return 'this' as the next path to run
-                return new PathExecutionResult<>(Collections.singletonList(this), false);
-            }
-        }
+    List<StateMachinePath<?, I, O>> next(ExecutionContextImpl<I, O> context) {
 
-        // pre hooks
-        if (runHooks) {
-            this.preHook(executionContext);
-        }
-
-        // execute
-        LinkedList<StateMachinePath<?, I, O>> nextRegions = new LinkedList<>();
+        LinkedList<StateMachinePath<?, I, O>> nextPaths = new LinkedList<>();
         for (TransitionWithContext<T> transition : this.state.getTransitions()) {
             try {
-                NextStateImpl<?> nextState = (NextStateImpl<?>) transition.apply(data, executionContext);
-                executionContext.getCurrentExecution().recordReached(nextState.getState());
-                nextRegions.add(new StateMachinePath<>(path, nextState));
+                NextStateImpl<?> nextState = (NextStateImpl<?>) transition.apply(data, context);
+                nextPaths.add(new StateMachinePath<>(path, nextState));
             } catch (RuntimeException e) {
-                nextRegions.add(handleException(e, executionContext));
+                nextPaths.add(handleException(e, context));
             }
         }
 
-        // post hook
-        if (runHooks) {
-            this.postHook(executionContext);
-        }
-        executionContext.getCurrentExecution().recordExecuted(this.state);
-        return new PathExecutionResult<>(nextRegions, true);
-    }
-
-    private boolean canExecute(ExecutionContextImpl<I, O> executionContext) {
-        return this.state.getRequirements().isSatisfied(executionContext);
-    }
-
-    private void preHook(ExecutionContextImpl<I, O> executionContext) {
-        // TODO
-    }
-
-    private void postHook(ExecutionContextImpl<I, O> executionContext) {
-        // TODO
+        return nextPaths;
     }
 
     // recursively handle exception from transition and exception from handlers themselves

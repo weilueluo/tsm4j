@@ -1,6 +1,8 @@
 package com.tsm4j.core;
 
 
+import java.util.Set;
+
 public interface StateMachineBuilder<I, O> {
 
     static <I, O> StateMachineBuilder<I, O> create(String name) {
@@ -9,7 +11,11 @@ public interface StateMachineBuilder<I, O> {
 
     <T> State<T> addState(String name);
 
+    <T> State<T> addState(String name, Set<State<?>> requiredStates);
+
     State<O> addOutputState(String name);
+
+    State<O> addOutputState(String name, Set<State<?>> requiredStates);
 
     State<I> addInputState(String name);
 

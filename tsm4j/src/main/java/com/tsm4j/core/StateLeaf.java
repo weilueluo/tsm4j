@@ -1,6 +1,8 @@
 package com.tsm4j.core;
 
 
+import java.util.Collections;
+
 class StateLeaf extends StateImpl<Void> {
 
     public static final StateLeaf INSTANCE = new StateLeaf();
@@ -8,7 +10,7 @@ class StateLeaf extends StateImpl<Void> {
     private static final String NAME = "LEAF_STATE";
 
     StateLeaf() {
-        super(NAME, false, false, new Requirements(new State[]{}));
+        super(NAME, false, false, Collections.emptySet());
     }
 
     @Override
