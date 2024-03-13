@@ -1,8 +1,8 @@
 package com.tsm4j.core;
 
+import com.tsm4j.core.queue.DependencyMap;
 import lombok.NonNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -13,28 +13,26 @@ import java.util.Set;
 class PathQueue<I, O> {
 
     private final Set<State<?>> validStates;
-    private final Map<State<?>, Set<State<?>>> rs2sMap;
-    private final Map<State<?>, Set<State<?>>> s2rsMap;
+    private final DependencyMap<State<?>, State<?>> stateDependencyMap;
     private final Map<State<?>, Set<StateMachinePath<?, I, O>>> pendingPathsMap;
-    private final LinkedList<StateMachinePath<?, I, O>> releasedQueue;
+    private final LinkedList<StateMachinePath<?, I, O>> freePathQueue;
 
     PathQueue(Set<State<?>> validStates) {
         this.validStates = new HashSet<>(validStates);
         this.validStates.add(NextState.leaf().getState());
-        this.rs2sMap = new HashMap<>();
-        this.s2rsMap = new HashMap<>();
+        this.stateDependencyMap = new DependencyMap<>();
         this.pendingPathsMap = new HashMap<>();
-        this.releasedQueue = new LinkedList<>();
+        this.freePathQueue = new LinkedList<>();
 
         this.validStates.forEach(this::require);
     }
 
     boolean isEmpty() {
-        return this.releasedQueue.isEmpty();
+        return this.freePathQueue.isEmpty();
     }
 
     StateMachinePath<?, I, O> pop() {
-        return this.releasedQueue.pop();
+        return this.freePathQueue.pop();
     }
 
     void addAll(List<StateMachinePath<?, I, O>> paths) {
@@ -46,83 +44,40 @@ class PathQueue<I, O> {
             // probably a transition returned a state from another state machine
             throw new IllegalArgumentException("Cannot add path containing an invalid state: " + path.getState());
         }
-        // we have reached this path, so release this state
-        notRequired(path.getState());
+        // we have reached this path, so remove this state as dependency
+        release(path.getState());
 
+        // if this state has no dependency, then we can add it directly
         if (isReleased(path.getState())) {
-            // this path is ready to be consumed
-            releasedQueue.add(path);
-            return;
-        }
-
-        // this path is not ready yet, some required states not met.
-        // add to pending map
-        if (pendingPathsMap.containsKey(path.getState())) {
-            pendingPathsMap.get(path.getState()).add(path);
+            freePathQueue.add(path);
         } else {
-            Set<StateMachinePath<?, I, O>> paths = new HashSet<>();
-            paths.add(path);
-            pendingPathsMap.put(path.getState(), paths);
+            // this path is not ready yet, some required states not met.
+            // add to pending map
+            if (pendingPathsMap.containsKey(path.getState())) {
+                pendingPathsMap.get(path.getState()).add(path);
+            } else {
+                Set<StateMachinePath<?, I, O>> paths = new HashSet<>();
+                paths.add(path);
+                pendingPathsMap.put(path.getState(), paths);
+            }
         }
     }
 
     private void require(@NonNull State<?> state) {
-        Set<State<?>> requiredStates = s2rsMap.get(state);
-        Set<State<?>> newRequiredStates = ((StateImpl<?>) state).getRequiredStates();
+        this.stateDependencyMap.addDependencies(state, ((StateImpl<?>) state).getRequiredStates());
+    }
 
-        // handle s2rsMap
-        if (requiredStates != null) {
-            requiredStates.addAll(newRequiredStates);
-        } else {
-            s2rsMap.put(state, new HashSet<>(((StateImpl<?>) state).getRequiredStates()));
-        }
-
-        // handle rs2sMap
-        newRequiredStates.forEach(rs -> {
-            Set<State<?>> states = rs2sMap.get(rs);
-            if (states != null) {
-                states.add(state);
-            } else {
-                states = new HashSet<>();
-                states.add(state);
-                rs2sMap.put(rs, states);
+    private void release(@NonNull StateImpl<?> requiredState) {
+        Set<State<?>> freedStates = this.stateDependencyMap.removeDependency(requiredState);
+        freedStates.forEach(state -> {
+            Set<StateMachinePath<?, I, O>> released = pendingPathsMap.remove(state);
+            if (released != null) {
+                this.freePathQueue.addAll(released);
             }
         });
     }
 
-    private void notRequired(@NonNull StateImpl<?> requiredState) {
-        List<StateMachinePath<?, I, O>> releasedPaths = new ArrayList<>();
-        Set<State<?>> states = rs2sMap.remove(requiredState);
-        if (states != null) {
-            // iterate through all states that depend on this required state
-            for (State<?> state : states) {
-                Set<State<?>> requiredStates = s2rsMap.get(state);
-                if (requiredStates != null) {
-                    // remove this required state from all states that depends on it
-                    requiredStates.remove(requiredState);
-                    if (requiredStates.isEmpty()) {
-                        // if this required state is the last required state of this state, add all pending path of this state to the queue
-                        s2rsMap.remove(state);
-                        Set<StateMachinePath<?, I, O>> released = pendingPathsMap.remove(state);
-                        if (released != null) {
-                            releasedPaths.addAll(released);
-                        }
-                    }
-                }
-            }
-        }
-        this.releasedQueue.addAll(releasedPaths);
-    }
-
     private boolean isReleased(StateImpl<?> state) {
-        Set<State<?>> requiredStates = s2rsMap.get(state);
-        if (requiredStates == null) {
-            return true;
-        } else if (requiredStates.isEmpty()) {
-            s2rsMap.remove(state);
-            return true;
-        } else {
-            return false;
-        }
+        return this.stateDependencyMap.isFree(state);
     }
 }
