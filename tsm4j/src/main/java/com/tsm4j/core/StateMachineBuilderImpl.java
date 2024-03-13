@@ -11,7 +11,7 @@ import java.util.Set;
 
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class StateMachineModelBuilderImpl<I, O> implements StateMachineModelBuilder<I, O> {
+class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     private final String name;
     private final Set<State<?>> states = new HashSet<>();
@@ -20,20 +20,20 @@ class StateMachineModelBuilderImpl<I, O> implements StateMachineModelBuilder<I, 
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
 
     @Override
-    public <T> State<T> addState(String name, State<?>... states) {
-        return this.addState(name, false, false, states);
+    public <T> State<T> addState(String name) {
+        return this.addState(name, false, false);
     }
 
     @Override
-    public State<I> addInputState(String name, State<?>... states) {
-        final State<I> state = this.addState(name, true, false, states);
+    public State<I> addInputState(String name) {
+        final State<I> state = this.addState(name, true, false);
         this.inputStates.add(state);
         return state;
     }
 
     @Override
-    public State<O> addOutputState(String name, State<?>... states) {
-        final State<O> state = this.addState(name, false, true, states);
+    public State<O> addOutputState(String name) {
+        final State<O> state = this.addState(name, false, true);
         this.outputStates.add(state);
         return state;
     }
@@ -82,4 +82,28 @@ class StateMachineModelBuilderImpl<I, O> implements StateMachineModelBuilder<I, 
     public StateMachine<I, O> build() {
         return new StateMachineImpl<>(name, states, inputStates, outputStates, exceptionHandlerMap);
     }
+
+//    public static class StateBuilder<T> {
+//        private final String name;
+//        private List<State<?>> requiredTransitionedStates = new ArrayList<>();
+//        private List<State<?>> requiredReachedStates = new ArrayList<>();
+//
+//        public StateBuilder(String name) {
+//            this.name = name;
+//        }
+//
+//        public StateBuilder<T> addRequiredReachedStates(List<State<?>> states) {
+//            this.requiredReachedStates.addAll(states);
+//            return this;
+//        }
+//
+//        public StateBuilder<T> addRequiredTransitionedStates(List<State<?>> states) {
+//            this.requiredTransitionedStates.addAll(states);
+//            return this;
+//        }
+//
+//        public State<?> build() {
+//
+//        }
+//    }
 }

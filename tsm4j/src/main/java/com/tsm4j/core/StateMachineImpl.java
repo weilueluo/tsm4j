@@ -44,8 +44,14 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
         Execution<I, O> currExecution = executionContext.startNewExecution(initState.getData());
 
+        this.execute(currExecution, initState);
+
+        return executionContext.endCurrentExecution();
+    }
+
+    private void execute(Execution<I, O> currExecution, NextState<I> initState) {
         final LinkedList<StateMachinePath<?, I, O>> pendingPaths = new LinkedList<>();
-        pendingPaths.add(new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<?>) initState, executionContext));
+        pendingPaths.add(new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<?>) initState));
 
         // run
         while (!pendingPaths.isEmpty()) {
@@ -62,7 +68,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
                     currExecution.recordPath(path.getPath());
                     continue;
                 }
-                StateMachinePath.ExecutionResult<I, O> result = path.tryExecute(executionContext);
+                PathExecutionResult<I, O> result = path.tryExecute(executionContext);
                 pendingPaths.addAll(result.getNextPaths());
                 if (result.isExecuted()) {
                     nothingExecuted = false;
@@ -70,10 +76,10 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
             }
 
             if (nothingExecuted) {
-                break;
+                while (!pendingPaths.isEmpty()) {
+                    currExecution.recordPath(pendingPaths.pop().getPath());
+                }
             }
         }
-
-        return executionContext.endCurrentExecution();
     }
 }

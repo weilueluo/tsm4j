@@ -1,17 +1,17 @@
 package com.tsm4j.core;
 
 
-public interface StateMachineModelBuilder<I, O> {
+public interface StateMachineBuilder<I, O> {
 
-    static <I, O> StateMachineModelBuilder<I, O> create(String name) {
-        return new StateMachineModelBuilderImpl<>(name);
+    static <I, O> StateMachineBuilder<I, O> create(String name) {
+        return new StateMachineBuilderImpl<>(name);
     }
 
-    <T> State<T> addState(String name, State<?>... states);
+    <T> State<T> addState(String name);
 
-    State<O> addOutputState(String name, State<?>... states);
+    State<O> addOutputState(String name);
 
-    State<I> addInputState(String name, State<?>... states);
+    State<I> addInputState(String name);
 
     <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandlerWithContext<E> exceptionHandler);
 

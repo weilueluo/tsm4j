@@ -2,12 +2,10 @@ package com.tsm4j.core;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 
 /*
@@ -22,16 +20,15 @@ class StateMachinePath<T, I, O> {
     private final T data;
     private boolean executed;
 
-    StateMachinePath(@NonNull ArrayList<State<?>> prevStates, @NonNull StateImpl<T> newState, T data, ExecutionContextImpl<I, O> executionContext) {
+    StateMachinePath(@NonNull ArrayList<State<?>> prevStates, @NonNull StateImpl<T> newState, T data) {
         this.state = newState;
         this.data = data;
         this.path = new ArrayList<>(prevStates);
         this.path.add(newState);
-        executionContext.getCurrentExecution().recordReached(newState);
     }
 
-    StateMachinePath(@NonNull ArrayList<State<?>> oldPath, @NonNull NextStateImpl<T> nextState, ExecutionContextImpl<I, O> executionContext) {
-        this(oldPath, nextState.getState(), nextState.getData(), executionContext);
+    StateMachinePath(@NonNull ArrayList<State<?>> oldPath, @NonNull NextStateImpl<T> nextState) {
+        this(oldPath, nextState.getState(), nextState.getData());
     }
 
     boolean isOutput() {
@@ -42,7 +39,7 @@ class StateMachinePath<T, I, O> {
         return this.state.isLeaf();
     }
 
-    ExecutionResult<I, O> tryExecute(ExecutionContextImpl<I, O> executionContext) {
+    PathExecutionResult<I, O> tryExecute(ExecutionContextImpl<I, O> executionContext) {
         boolean runHooks = false;
         if (!this.executed) {  // if passed the execute check before, then allow it for subsequent runs
             if (this.canExecute(executionContext)) {
@@ -50,7 +47,7 @@ class StateMachinePath<T, I, O> {
                 this.executed = true;
             } else {
                 // cant execute yet, return 'this' as the next path to run
-                return new ExecutionResult<>(Collections.singletonList(this), false);
+                return new PathExecutionResult<>(Collections.singletonList(this), false);
             }
         }
 
@@ -64,7 +61,8 @@ class StateMachinePath<T, I, O> {
         for (TransitionWithContext<T> transition : this.state.getTransitions()) {
             try {
                 NextStateImpl<?> nextState = (NextStateImpl<?>) transition.apply(data, executionContext);
-                nextRegions.add(new StateMachinePath<>(path, nextState, executionContext));
+                executionContext.getCurrentExecution().recordReached(nextState.getState());
+                nextRegions.add(new StateMachinePath<>(path, nextState));
             } catch (RuntimeException e) {
                 nextRegions.add(handleException(e, executionContext));
             }
@@ -75,7 +73,7 @@ class StateMachinePath<T, I, O> {
             this.postHook(executionContext);
         }
         executionContext.getCurrentExecution().recordExecuted(this.state);
-        return new ExecutionResult<>(nextRegions, true);
+        return new PathExecutionResult<>(nextRegions, true);
     }
 
     private boolean canExecute(ExecutionContextImpl<I, O> executionContext) {
@@ -98,7 +96,7 @@ class StateMachinePath<T, I, O> {
         } else {
             try {
                 NextStateImpl<?> nextState = (NextStateImpl<?>) handlerToUse.get().apply(e, executionContext);  // this cast is safe... as long as this is the only implementing class
-                return new StateMachinePath<>(path, nextState, executionContext);
+                return new StateMachinePath<>(path, nextState);
             } catch (RuntimeException nestedException) {
                 if (nestedException == e) { // avoid infinite recursion
                     throw e;
@@ -117,12 +115,5 @@ class StateMachinePath<T, I, O> {
         } else {
             return getClosestExceptionHandler(clazz.getSuperclass(), context);
         }
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    static class ExecutionResult<I, O> {
-        private final List<StateMachinePath<?, I, O>> nextPaths;
-        private final boolean executed;
     }
 }

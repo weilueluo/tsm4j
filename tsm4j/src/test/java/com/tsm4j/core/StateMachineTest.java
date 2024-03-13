@@ -2,8 +2,6 @@ package com.tsm4j.core;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,7 +12,7 @@ class StateMachineTest {
     @Test
     public void demo() {
         // create a state machine builder with Integer input and String output named demo
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("demo");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("demo");
 
         // define states
         // s1 has Integer input with name "s1"
@@ -50,7 +48,7 @@ class StateMachineTest {
 
     @Test
     public void test() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("test");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -74,8 +72,59 @@ class StateMachineTest {
     }
 
     @Test
+    public void testRequiredState() {
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<Integer> state1 = builder.addState("intState1");
+        State<Integer> state2 = builder.addState("intState2");
+        State<Integer> state3 = builder.addState("intState3", state2);  // state3 depends on state2
+
+        State<String> state4 = builder.addOutputState("out", state2);
+
+        // define transitions
+        builder.addTransition(state1, (i) ->  state3.of(1));
+        builder.addTransition(state1, (i) ->  state2.of(1));
+
+        builder.addTransition(state3, (i) -> state4.of("3->4"));
+        builder.addTransition(state2, (i) -> state4.of("2->4"));
+
+        StateMachine<Integer, String> stateMachine = builder.build();
+
+        // trigger from state1
+        Execution<Integer, String> result = stateMachine.send(state1.of(1));
+        assertThat(result.getOutputs()).containsExactly("2->4", "3->4");
+    }
+
+    @Test
+    public void testRequiredState2() {
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<Integer> state1 = builder.addState("intState1");
+        State<Integer> state2 = builder.addState("intState2");
+        State<Integer> state5 = builder.addState("intState5");
+        State<Integer> state3 = builder.addState("intState3", state5);  // state3 depends on state5
+
+        State<String> state4 = builder.addOutputState("out", state2);
+
+        // define transitions
+        builder.addTransition(state1, (i) ->  state3.of(1));
+        builder.addTransition(state1, (i) ->  state2.of(1));
+
+        builder.addTransition(state3, (i) -> state4.of("3->4"));
+        builder.addTransition(state2, (i) -> state4.of("2->4"));
+
+        StateMachine<Integer, String> stateMachine = builder.build();
+
+        // trigger from state1
+        Execution<Integer, String> result = stateMachine.send(state1.of(1));
+        assertThat(result.getOutputs()).containsExactly("2->4");  // no "3->4" output because condition not satisfied
+    }
+
+    @Test
     public void testMultipleOutputs() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("test");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -97,7 +146,7 @@ class StateMachineTest {
 
     @Test
     public void testRecursiveTransition() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("test");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -124,7 +173,7 @@ class StateMachineTest {
 
     @Test
     public void testExceptionHandler() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testExceptionHandler");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testExceptionHandler");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -148,7 +197,7 @@ class StateMachineTest {
 
     @Test
     public void testNestedExceptionHandler() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testExceptionHandler");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testExceptionHandler");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -175,7 +224,7 @@ class StateMachineTest {
 
     @Test
     public void testNestedSameExceptionHandler() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testExceptionHandler");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testExceptionHandler");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -198,7 +247,7 @@ class StateMachineTest {
 
     @Test
     public void testExceptionHandler_throwingSubclass() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testExceptionHandler_throwingSubclass");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testExceptionHandler_throwingSubclass");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");
@@ -222,7 +271,7 @@ class StateMachineTest {
 
     @Test
     public void testNoOutput() {
-        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testNoOutput");
+        StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testNoOutput");
 
         // define states
         State<Integer> state1 = builder.addState("intState1");

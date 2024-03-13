@@ -10,7 +10,7 @@ class Requirements {
 
     boolean isSatisfied(ExecutionContextImpl<?, ?> executionContext) {
         for (State<?> state : requiredStates) {
-            if (executionContext.getCurrentExecution().getStateReachedCount(state) == 0) {
+            if (executionContext.getCurrentExecution().getStateExecutedCount(state) == 0) {
                 return false;
             }
         }

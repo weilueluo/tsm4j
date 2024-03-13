@@ -10,20 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@ToString(exclude = "transitions")
+@ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 class StateImpl<T> implements State<T> {
 
+    @ToString.Include
     @EqualsAndHashCode.Include
     private final String name;
-    private final List<TransitionWithContext<T>> transitions = new ArrayList<>();
+    @ToString.Include
     @EqualsAndHashCode.Include
     private final boolean isInput;
+    @ToString.Include
     @EqualsAndHashCode.Include
     private final boolean isOutput;
     private final Requirements requirements;
+    private final List<TransitionWithContext<T>> transitions = new ArrayList<>();
 
     public boolean isLeaf() {
         return this.transitions.isEmpty();
