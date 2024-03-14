@@ -25,7 +25,11 @@ public interface StateMachineBuilder<I, O> {
 
     <T> void addTransition(State<T> state, Transition<T> transition);
 
+    <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates);
+
     <T> void addTransition(State<T> state, TransitionWithContext<T> transition);
+
+    <T> void addTransition(State<T> state, TransitionWithContext<T> transition, Set<State<?>> requiredStates);
 
     StateMachine<I, O> build();
 }

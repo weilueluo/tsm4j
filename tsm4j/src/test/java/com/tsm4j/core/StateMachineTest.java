@@ -2,7 +2,9 @@ package com.tsm4j.core;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,7 +105,6 @@ class StateMachineTest {
 
         // trigger from state1
         Execution<Void, Integer> result = stateMachine.send(in.of(null));
-        System.out.println(result.getOutputs());
         assertThat(result.getOutputs()).containsExactly(1, 2);
     }
 
@@ -149,8 +150,42 @@ class StateMachineTest {
 
         // trigger from state1
         Execution<Void, Integer> result = stateMachine.send(in.of(null));
-        System.out.println(result.getOutputs());
         assertThat(result.getOutputs()).containsExactly(1, 2);
+    }
+
+    @Test
+    public void testTransitionRequiredState2() {
+        StateMachineBuilder<Void, Integer> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<Void> in = builder.addInputState("in");
+        State<Void> s2 = builder.addState("s2");
+        State<Void> s3 = builder.addState("s3");
+        State<Void> s4 = builder.addState("s4");
+        State<Void> s5 = builder.addState("s5");
+        State<Void> s6 = builder.addState("s6");
+        State<Integer> out = builder.addOutputState("out");
+
+
+        // define transitions
+        builder.addTransition(in, (i) -> s2.of(null));
+        builder.addTransition(in, (i) -> s6.of(null), setOf(s2, s5));
+        builder.addTransition(in, (i) -> s4.of(null), setOf(s2, s3));
+        builder.addTransition(in, (i) -> s3.of(null), setOf(s2));
+        builder.addTransition(in, (i) -> s5.of(null), setOf(s4));
+
+        builder.addTransition(s2, (i) -> out.of(2));
+        builder.addTransition(s3, (i) -> out.of(3));
+        builder.addTransition(s4, (i) -> out.of(4));
+        builder.addTransition(s5, (i) -> out.of(5));
+        builder.addTransition(s6, (i) -> out.of(6));
+
+        StateMachine<Void, Integer> stateMachine = builder.build();
+
+        // trigger from state1
+        Execution<Void, Integer> result = stateMachine.send(in.of(null));
+        System.out.println(result.getOutputs());
+        assertThat(result.getOutputs()).containsExactly(2, 3, 4, 5, 6);
     }
 
     @Test
@@ -320,126 +355,8 @@ class StateMachineTest {
         assertEquals(0, results.getOutputs().size());
     }
 
-//    @Test
-//    public void testContext() {
-//        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testContext");
-//
-//        // define states
-//        State<Integer> state1 = builder.addState("intState1");
-//        State<String> state2 = builder.addState("intState2");
-//
-//
-//        // define transitions
-//        builder.addTransition(state1, (i, c) -> {
-//            if (i > 10) {
-//                return state2.of("done");
-//            }
-//            c.set(String.valueOf(i), "cache item " + i);
-//            return state1.of(i + 1);
-//        });
-//
-//        builder.addTransition(state2, (i, c) -> {
-//            for (int j = 0; j <= 10; j++) {
-//                Optional<String> cacheItem = c.get(String.valueOf(j), String.class);
-//                assertTrue(cacheItem.isPresent());
-//                assertThat(cacheItem.get()).isEqualTo("cache item " + j);
-//            }
-//            return NextState.leaf();
-//        });
-//
-//        StateMachine<Integer, String> stateMachine = builder.build();
-//
-//        // run
-//        Execution<Integer, String> results = stateMachine.send(state1.of(0));
-//        assertEquals(0, results.getOutputs().size());
-//    }
-//
-//    @Test
-//    public void testContext_setByObject() {
-//        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testContext");
-//
-//        // define states
-//        State<Integer> state1 = builder.addState("intState1");
-//        State<Integer> state2 = builder.addState("intState2");
-//
-//
-//        // define transitions
-//        builder.addTransition(state1, (i, c) -> {
-//            c.set("cache item");
-//            return state2.of(i);
-//        });
-//
-//        builder.addTransition(state2, (i, c) -> {
-//            Optional<String> cacheItem = c.get(String.class);
-//            assertTrue(cacheItem.isPresent());
-//            assertThat(cacheItem.get()).isEqualTo("cache item");
-//            return NextState.leaf();
-//        });
-//
-//        StateMachine<Integer, String> stateMachine = builder.build();
-//
-//        // run
-//        Execution<Integer, String> results = stateMachine.send(state1.of(0));
-//        assertEquals(0, results.getOutputs().size());
-//    }
-//
-//    @Test
-//    public void testContext_getOrError() {
-//        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testContext");
-//
-//        // define states
-//        State<Integer> state1 = builder.addState("intState1");
-//        State<Integer> state2 = builder.addState("intState2");
-//
-//
-//        // define transitions
-//        builder.addTransition(state1, (i, c) -> {
-//            c.set("cache item");
-//            return state2.of(i);
-//        });
-//
-//        builder.addTransition(state2, (i, c) -> {
-//            String cacheItem = c.getOrError(String.class);
-//            assertThat(cacheItem).isEqualTo("cache item");
-//            return NextState.leaf();
-//        });
-//
-//        StateMachine<Integer, String> stateMachine = builder.build();
-//
-//        // run
-//        Execution<Integer, String> results = stateMachine.send(state1.of(0));
-//        assertEquals(0, results.getOutputs().size());
-//    }
-//
-//    @Test
-//    public void testContext_getOrDefault() {
-//        StateMachineModelBuilder<Integer, String> builder = StateMachineModelBuilder.create("testContext");
-//
-//        // define states
-//        State<Integer> state1 = builder.addState("intState1");
-//        State<Integer> state2 = builder.addState("intState2");
-//
-//
-//        // define transitions
-//        builder.addTransition(state1, (i, c) -> {
-//            c.set("cache item");
-//            return state2.of(i);
-//        });
-//
-//        builder.addTransition(state2, (i, c) -> {
-//            String cacheItem = c.getOrDefault(String.class, null);
-//            assertThat(cacheItem).isEqualTo("cache item");
-//
-//            Integer cacheItem2 = c.getOrDefault(Integer.class, () -> 123);
-//            assertThat(cacheItem2).isEqualTo(123);
-//
-//            return NextState.leaf();
-//        });
-//
-//        StateMachine<Integer, String> stateMachine = builder.build();
-//
-//        // run
-//        Execution<Integer, String> results = stateMachine.send(state1.of(0));
-//        assertEquals(0, results.getOutputs().size());
-//    }
+
+    private <T> Set<T> setOf(T... values) {
+        return new HashSet<>(Arrays.asList(values));
+    }
 }

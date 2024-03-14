@@ -71,16 +71,26 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     @Override
     public <T> void addTransition(State<T> state, Transition<T> transition) {
+        this.addTransition(state, transition, Collections.emptySet());
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates) {
         Objects.requireNonNull(state);
         Objects.requireNonNull(transition);
-        ((StateImpl<T>) state).addTransition(transition);  // this cast is safe because we have only one implementing class
+        ((StateImpl<T>) state).addTransition(Transition.from(transition, requiredStates));
     }
 
     @Override
     public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
+        this.addTransition(state, transition, Collections.emptySet());
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, Set<State<?>> requiredStates) {
         Objects.requireNonNull(state);
         Objects.requireNonNull(transition);
-        ((StateImpl<T>) state).addTransition(transition);  // this cast is safe because we have only one implementing class
+        ((StateImpl<T>) state).addTransition(TransitionWithContext.from(transition, requiredStates));
     }
 
     @Override
