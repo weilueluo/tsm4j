@@ -15,6 +15,7 @@ class ExecutionContextImpl<I, O> implements ExecutionContext {
     private final Set<State<?>> states;
     private final Execution<I, O> execution;
     private final PathQueue<I, O> pathQueue;
+    private final TransitionQueue<I, O> transitionQueue;
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap;
 
     public ExecutionContextImpl(
@@ -28,6 +29,7 @@ class ExecutionContextImpl<I, O> implements ExecutionContext {
         this.execution = new Execution<>(initPath.getState(), initPath.getData());
         this.pathQueue = new PathQueue<>(states);
         this.pathQueue.add(initPath);
+        this.transitionQueue = new TransitionQueue<>();
     }
 
     public void recordOutput(O output) {

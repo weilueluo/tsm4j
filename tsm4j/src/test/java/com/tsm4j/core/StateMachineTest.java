@@ -3,6 +3,7 @@ package com.tsm4j.core;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -89,6 +90,52 @@ class StateMachineTest {
 
         // define transitions
         builder.addTransition(in, (i) -> s5.of(null));
+        builder.addTransition(s5, (i) -> s6.of(null));
+        builder.addTransition(s6, (i) -> out.of(2));
+
+        builder.addTransition(in, (i) -> s2.of(null));
+        builder.addTransition(s2, (i) -> s3.of(null));
+        builder.addTransition(s3, (i) -> s4.of(null));
+        builder.addTransition(s4, (i) -> out.of(1));
+
+
+        StateMachine<Void, Integer> stateMachine = builder.build();
+
+        // trigger from state1
+        Execution<Void, Integer> result = stateMachine.send(in.of(null));
+        System.out.println(result.getOutputs());
+        assertThat(result.getOutputs()).containsExactly(1, 2);
+    }
+
+
+    @Test
+    public void testTransitionRequiredState() {
+        StateMachineBuilder<Void, Integer> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<Integer> out = builder.addOutputState("out");
+
+        State<Void> in = builder.addInputState("in");
+        State<Void> s2 = builder.addState("s2");
+        State<Void> s3 = builder.addState("s3");
+        State<Void> s4 = builder.addState("s4");
+        State<Void> s5 = builder.addState("s5");
+        State<Void> s6 = builder.addState("s6");
+
+
+        // define transitions
+        builder.addTransition(in, new Transition<Void>() {
+            @Override
+            public Set<State<?>> requiredStates() {
+                // need to have at least one output before running this transition
+                return Collections.singleton(out);
+            }
+
+            @Override
+            public NextState<?> apply(Void unused) {
+                return s5.of(null);
+            }
+        });
         builder.addTransition(s5, (i) -> s6.of(null));
         builder.addTransition(s6, (i) -> out.of(2));
 

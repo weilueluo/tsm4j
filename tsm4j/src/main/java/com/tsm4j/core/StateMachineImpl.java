@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -49,18 +50,58 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
     }
 
     private void execute(ExecutionContextImpl<I, O> context) {
-        PathQueue<I, O> queue = context.getPathQueue();
+        PathQueue<I, O> pathQueue = context.getPathQueue();
+        TransitionQueue<I, O> transitionQueue = context.getTransitionQueue();
         // run
-        while (!queue.isEmpty()) {
-            final StateMachinePath<?, I, O> path = queue.pop();
-            if (path.isOutput()) {
-                context.recordOutput((O) path.getData());
+        while (!transitionQueue.isEmpty() || !pathQueue.isEmpty()) {
+            if (!transitionQueue.isEmpty()) {
+                StateMachineTransition<?> transition = transitionQueue.pop();
+                NextStateImpl<?> nextState;
+                try {
+                    nextState = (NextStateImpl<?>) transition.apply(context);
+                } catch (RuntimeException e) {
+                    nextState = this.handleException(e, context);
+                }
+                StateMachinePath<?, I, O> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
+                pathQueue.add(nextPath);
+            } else {
+                final StateMachinePath<?, I, O> path = pathQueue.pop();
+                if (path.isOutput()) {
+                    context.recordOutput((O) path.getData());
+                }
+                if (path.isLeaf()) {
+                    context.recordPath(path.getPath());
+                }
+                transitionQueue.consume(path);
             }
-            if (path.isLeaf()) {
-                context.recordPath(path.getPath());
-                continue;
+        }
+    }
+
+    // recursively handle exception from transition and exception from handlers themselves
+    private <E extends RuntimeException> NextStateImpl<?> handleException(E e, ExecutionContextImpl<I, O> executionContext) {
+        Optional<ExceptionHandlerWithContext<E>> handlerToUse = getClosestExceptionHandler(e.getClass(), executionContext);
+        if (!handlerToUse.isPresent()) {
+            throw e;
+        } else {
+            try {
+                return (NextStateImpl<?>) handlerToUse.get().apply(e, executionContext);
+            } catch (RuntimeException nestedException) {
+                if (nestedException == e) { // avoid infinite recursion
+                    throw e;
+                }
+                return handleException(nestedException, executionContext);
             }
-            queue.addAll(path.next(context));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends RuntimeException> Optional<ExceptionHandlerWithContext<E>> getClosestExceptionHandler(Class<?> clazz, ExecutionContextImpl<I, O> context) {
+        if (clazz == null) {
+            return Optional.empty();
+        } else if (context.getExceptionHandlerMap().containsKey(clazz)) {
+            return Optional.ofNullable((ExceptionHandlerWithContext<E>) context.getExceptionHandlerMap().get(clazz));
+        } else {
+            return getClosestExceptionHandler(clazz.getSuperclass(), context);
         }
     }
 }

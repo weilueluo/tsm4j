@@ -4,8 +4,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -24,7 +24,7 @@ class StateImpl<T> implements State<T> {
     @EqualsAndHashCode.Include
     private final boolean isOutput;
     private final Set<State<?>> requiredStates;
-    private final List<TransitionWithContext<T>> transitions;
+    private final Map<String, TransitionWithContext<T>> transitionsMap;  // id to transition map
 
     StateImpl(
             String name,
@@ -36,11 +36,11 @@ class StateImpl<T> implements State<T> {
         this.isOutput = isOutput;
         this.isInput = isInput;
         this.requiredStates = requiredStates;
-        this.transitions = new ArrayList<>();
+        this.transitionsMap = new HashMap<>();
     }
 
     public boolean isLeaf() {
-        return this.transitions.isEmpty();
+        return this.transitionsMap.isEmpty();
     }
 
     public boolean isInput() {
@@ -56,10 +56,10 @@ class StateImpl<T> implements State<T> {
     }
 
     void addTransition(Transition<T> transition) {
-        this.transitions.add(transition);
+        this.addTransition((TransitionWithContext<T>) transition);
     }
 
     void addTransition(TransitionWithContext<T> transition) {
-        this.transitions.add(transition);
+        this.transitionsMap.put(name + "transition-" + transitionsMap.size(), transition);
     }
 }
