@@ -166,7 +166,6 @@ class StateMachineTest {
         State<Void> s6 = builder.addState("s6");
         State<Integer> out = builder.addOutputState("out");
 
-
         // define transitions
         builder.addTransition(in, (i) -> s2.of(null));
         builder.addTransition(in, (i) -> s6.of(null), setOf(s2, s5));

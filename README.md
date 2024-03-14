@@ -7,7 +7,7 @@ Typed State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.6'
+implementation 'com.tsm4j:tsm4j:0.0.7'
 ```
 
 ### Maven
@@ -15,7 +15,7 @@ implementation 'com.tsm4j:tsm4j:0.0.6'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
 </dependency>
 ```
 
@@ -64,9 +64,6 @@ public class Demo {
 ```
 
 For more usage examples see tests.
-
-## Notes
-- It is actually more like a graph runner at the moment...
 
 ## Contributing
 Feel free to open up an issue for feature request or bug report.
