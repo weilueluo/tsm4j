@@ -20,7 +20,6 @@ implementation 'com.tsm4j:tsm4j:0.0.7'
 ```
 
 ## Features
-- Functional (kind of)
 - Easy to use
 - Type safe transition
 - Use state like event and transition like action
