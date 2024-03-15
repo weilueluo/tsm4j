@@ -1,44 +1,52 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetype.AbstractStateType;
-import com.tsm4j.core.statetype.StateType;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
-    private final StateMachineId stateMachineId;
-
+    private final String name;
+    private final Set<State<?>> states = new HashSet<>();
+    private final Set<State<I>> inputStates = new HashSet<>();
+    private final Set<State<O>> outputStates = new HashSet<>();
     private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
 
     @Override
-    public <T> State<T> newTransitionState(String name) {
-        return this.newTransitionState(name, Order.DEFAULT_PRECEDENCE);
+    public <T> State<T> addState(String name) {
+        return this.addState(name, false, false, Collections.emptySet());
     }
 
     @Override
-    public <T> State<T> newTransitionState(String name, int order) {
-        return this.newState(name, StateType.TRANSITION, order);
+    public State<I> addInputState(String name) {
+        final State<I> state = this.addState(name, true, false, Collections.emptySet());
+        this.inputStates.add(state);
+        return state;
     }
 
-    public State<O> newOutputState(String name, int order) {
-        return this.newState(name, StateType.OUTPUT, order);
+    @Override
+    public State<O> addOutputState(String name) {
+        final State<O> state = this.addState(name, false, true, Collections.emptySet());
+        this.outputStates.add(state);
+        return state;
     }
 
-    public State<O> newOutputState(String name) {
-        return this.newOutputState(name, Order.DEFAULT_PRECEDENCE);
-    }
-
-    private <T> State<T> newState(String name, AbstractStateType type, int order) {
+    private <T> State<T> addState(String name, boolean isInput, boolean isOutput, Set<State<?>> requiredStates) {
         Objects.requireNonNull(name);
-        Objects.requireNonNull(type);
-        return new StateImpl<>(new StateImpl.Id(name, type, order));
+        final State<T> state = new StateImpl<>(name, isInput, isOutput, requiredStates);
+        if (this.states.contains(state)) {
+            throw new IllegalArgumentException("State already exists, state=" + state);
+        }
+        this.states.add(state);
+        return state;
     }
 
     @Override
@@ -51,30 +59,38 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
         this.exceptionHandlerMap.put(clazz, exceptionHandler);
     }
 
+    @Override
     public <T> void addTransition(State<T> state, Transition<T> transition) {
-        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+        this.addTransition(state, transition, Collections.emptySet());
     }
 
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates) {
+        Objects.requireNonNull(state);
+        Objects.requireNonNull(transition);
+        ((StateImpl<T>) state).addTransition(Transition.from(transition, requiredStates));
+    }
+
+    @Override
     public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
-        this.addTransition(state, transition, Order.DEFAULT_PRECEDENCE);
+        this.addTransition(state, transition, Collections.emptySet());
     }
 
-    public <T> void addTransition(State<T> state, Transition<T> transition, int order) {
-        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
+    @Override
+    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, Set<State<?>> requiredStates) {
+        Objects.requireNonNull(state);
+        Objects.requireNonNull(transition);
+        ((StateImpl<T>) state).addTransition(TransitionWithContext.from(transition, requiredStates));
     }
-
-    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order) {
-        ((StateImpl<T>) state).addTransition(transition, order);  // this cast is safe because we have only one implementing class
-    }
-
 
     @Override
     public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {
+        Objects.requireNonNull(exceptionHandler);
         addExceptionHandler(clazz, (ExceptionHandlerWithContext<E>) exceptionHandler);
     }
 
     @Override
     public StateMachine<I, O> build() {
-        return new StateMachineImpl<>(stateMachineId, exceptionHandlerMap);
+        return new StateMachineImpl<>(name, states, inputStates, outputStates, exceptionHandlerMap);
     }
 }

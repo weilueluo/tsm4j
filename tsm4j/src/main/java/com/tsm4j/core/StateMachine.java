@@ -2,8 +2,7 @@ package com.tsm4j.core;
 
 public interface StateMachine<I, O> {
 
-    StateMachineId getId();
+    String getName();
 
-    StateMachineResult<O> run(NextState<I> initState);
-
+    Execution<I, O> send(NextState<I> initState);
 }

@@ -1,18 +1,13 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.statetype.AbstractStateType;
-
-public interface State<T> extends Comparable<State<?>> {
-
-    Id getId();
+public interface State<T> {
+    String getName();
 
     NextState<T> of(T data);
 
-    interface Id extends Comparable<Id> {
-        String getName();
+    boolean isInput();
 
-        AbstractStateType getType();
+    boolean isOutput();
 
-        int getOrder();
-    }
+    boolean isLeaf();
 }

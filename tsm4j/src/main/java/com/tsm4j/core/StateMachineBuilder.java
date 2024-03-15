@@ -1,19 +1,19 @@
 package com.tsm4j.core;
 
 
+import java.util.Set;
+
 public interface StateMachineBuilder<I, O> {
 
     static <I, O> StateMachineBuilder<I, O> create(String name) {
-        return new StateMachineBuilderImpl<>(new StateMachineIdImpl(name));
+        return new StateMachineBuilderImpl<>(name);
     }
 
-    <T> State<T> newTransitionState(String name);
+    <T> State<T> addState(String name);
 
-    <T> State<T> newTransitionState(String name, int order);
+    State<O> addOutputState(String name);
 
-    State<O> newOutputState(String name, int order);
-
-    State<O> newOutputState(String name);
+    State<I> addInputState(String name);
 
     <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandlerWithContext<E> exceptionHandler);
 
@@ -21,11 +21,11 @@ public interface StateMachineBuilder<I, O> {
 
     <T> void addTransition(State<T> state, Transition<T> transition);
 
+    <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates);
+
     <T> void addTransition(State<T> state, TransitionWithContext<T> transition);
 
-    <T> void addTransition(State<T> state, Transition<T> transition, int order);
-
-    <T> void addTransition(State<T> state, TransitionWithContext<T> transition, int order);
+    <T> void addTransition(State<T> state, TransitionWithContext<T> transition, Set<State<?>> requiredStates);
 
     StateMachine<I, O> build();
 }
