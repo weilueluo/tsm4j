@@ -4,7 +4,6 @@ import com.tsm4j.core.exception.StateNotReachedException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -124,7 +123,7 @@ class StateMachineTest {
 
         // define transitions
         builder.addTransition(in, (i) -> s2.of(null));
-                                                                            // transition level dependencies
+        // transition level dependencies
         builder.addTransition(in, (i) -> s6.of(null), setOf(s2, s5));  // transition to s6 must run after reaching s2 and s5
         builder.addTransition(in, (i) -> s4.of(null), setOf(s2, s3));  // transition to s4 must run after reaching s2 and s3
         builder.addTransition(in, (i) -> s3.of(null), setOf(s2));      // transition to s3 must run after reaching s2

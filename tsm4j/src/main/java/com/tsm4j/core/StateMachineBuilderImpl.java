@@ -33,7 +33,7 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
     }
 
     @Override
-    public State<O> addOutputState(String names) {
+    public State<O> addOutputState(String name) {
         final State<O> state = this.addState(name, false, true, Collections.emptySet());
         this.outputStates.add(state);
         return state;
