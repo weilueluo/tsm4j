@@ -31,11 +31,14 @@ public class TransitionQueue<I, O> {
 
     private void add(StateMachineTransition<?> transition) {
         if (!this.transitionDependencyMap.addDependencies(transition.getId(), transition.getRequiredStates())) {
-            // already satisfied
-            this.freeTransitionQueue.add(transition);
-        } else {
-            // put on waiting list
-            this.transitionDependencyMap.addValue(transition.getId(), transition);
+            // dependencies are already configured before for this transition
+            if (this.transitionDependencyMap.isFree(transition.getId())) {
+                // already satisfied
+                this.freeTransitionQueue.add(transition);
+            }
         }
+        // else dependencies not satisfied
+        // put on waiting list
+        this.transitionDependencyMap.addValue(transition.getId(), transition);
     }
 }

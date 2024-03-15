@@ -16,7 +16,7 @@ public class DependencyMap<K, D> {
         this.freedDependencies = new HashSet<>();
     }
 
-    // return false if the key is already satisfied
+    // return false if the key is already configured with some dependencies before
     public boolean addDependencies(K key, Set<D> dependencies) {
         if (k2vAdd(key, dependencies)) {
             dependencies.forEach(d -> v2kAdd(d, key));
@@ -33,14 +33,15 @@ public class DependencyMap<K, D> {
             affectedKeys.forEach(key -> {
                 Set<D> keyDependencies = this.k2d.get(key);
                 if (keyDependencies == null) {
-                    // should not reach here, because it is impossible for some affected keys have no dependencies
+                    // should not reach here, because it should be impossible for some affected keys have no dependencies
                     freedKeys.add(key);
                 } else {
                     keyDependencies.remove(dependency);
                     if (keyDependencies.isEmpty()) {
-                        // we do not remove the key if it is freed
-                        // because we want to differentiate keys that are satisfied and keys that are not seen
                         freedKeys.add(key);
+                        // we do not remove the key from k2d if it is freed
+                        // because we want to differentiate keys that are configured with dependencies and keys that are not
+                        // we do not allow adding new dependencies to the same key twice
                     }
                 }
             });
@@ -49,32 +50,38 @@ public class DependencyMap<K, D> {
         return freedKeys;
     }
 
+    public Set<K> removeDependencies(Set<D> dependencies) {
+        // make it more efficient...
+        Set<K> freedKeys = new HashSet<>();
+        dependencies.forEach(d -> freedKeys.addAll(this.removeDependency(d)));
+        return freedKeys;
+    }
+
+    public Set<D> getDependencies(K key) {
+        return this.k2d.get(key);
+    }
+
     public boolean containsKey(K key) {
         return this.k2d.containsKey(key);
     }
 
     public boolean isFree(K key) {
-        Set<D> dependencies = this.k2d.get(key);
+        Set<D> dependencies = getDependencies(key);
         return dependencies == null || dependencies.isEmpty();
+        // note if a key is not seen, i.e. no dependencies is added before, we return true as well
     }
 
-    // return false if key is already satisfied
+    // return false if dependencies is already added for this key
     private boolean k2vAdd(K key, Set<D> dependencies) {
-        Set<D> copy = new HashSet<>(dependencies);
         Set<D> existing = this.k2d.get(key);
         if (existing == null) {
             // new key and dependencies
-            freedDependencies.forEach(copy::remove);  // remove dependencies that already freed
-            this.k2d.put(key, copy);
-            return !copy.isEmpty();  // key is satisfied if it has empty dependencies
-        } else if (existing.isEmpty()) {
-            // key is already freed, we ignore given dependencies
-            return false;
-        } else {
-            // key is not freed and we got some additional some dependencies
-            freedDependencies.forEach(copy::remove);  // remove dependencies that already freed
-            existing.addAll(copy);
+            Set<D> toAdd = removeFreed(new HashSet<>(dependencies));
+            this.k2d.put(key, toAdd);
             return true;
+        } else {
+            // dependencies can only be added once, so we ignore further given dependencies
+            return false;
         }
     }
 
@@ -87,5 +94,15 @@ public class DependencyMap<K, D> {
             keys.add(key);
             this.d2k.put(dependent, keys);
         }
+    }
+
+    private Set<D> removeFreed(Set<D> dependencies) {
+        Set<D> notFreed = new HashSet<>();
+        dependencies.forEach(d -> {
+            if (!freedDependencies.contains(d)) {
+                notFreed.add(d);
+            }
+        });
+        return notFreed;
     }
 }

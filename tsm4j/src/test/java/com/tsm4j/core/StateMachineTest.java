@@ -181,9 +181,7 @@ class StateMachineTest {
 
         StateMachine<Void, Integer> stateMachine = builder.build();
 
-        // trigger from state1
         Execution<Void, Integer> result = stateMachine.send(in.of(null));
-        System.out.println(result.getOutputs());
         assertThat(result.getOutputs()).containsExactly(2, 3, 4, 5, 6);
     }
 
