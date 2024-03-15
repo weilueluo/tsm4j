@@ -23,7 +23,7 @@ public class TransitionQueue<I, O> {
         return this.availableQueue.isEmpty();
     }
 
-    void consume(StateMachinePath<?, I, O> path) {
+    void consume(StateMachinePath<?> path) {
         Set<StateMachineTransition<?>> freedTransitions = dependencyMap.removeDependency(path.getState()); // we reached path containing this state, so remove it as dependency
         this.availableQueue.addAll(freedTransitions);
         path.getTransitions().forEach(this::add);

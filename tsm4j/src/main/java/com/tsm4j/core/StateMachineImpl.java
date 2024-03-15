@@ -41,7 +41,7 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
 
     public Execution<I, O> send(NextState<I> initState) {
 
-        final StateMachinePath<I, I, O> initPath = new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<I>) initState);
+        final StateMachinePath<I> initPath = new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<I>) initState);
         final ExecutionContextImpl<I, O> context = new ExecutionContextImpl<>(name, states, exceptionHandlerMap, initPath);
 
         this.execute(context);
@@ -63,11 +63,11 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
                     nextState = this.handleException(e, context);
                 }
 
-                StateMachinePath<?, I, O> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
+                StateMachinePath<?> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
                 context.notifyNewPath(nextPath);
                 pathQueue.add(nextPath);
             } else {
-                StateMachinePath<?, I, O> path = pathQueue.pop();
+                StateMachinePath<?> path = pathQueue.pop();
                 transitionQueue.consume(path);
             }
         }

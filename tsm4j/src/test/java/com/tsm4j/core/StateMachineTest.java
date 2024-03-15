@@ -5,9 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,11 +34,11 @@ class StateMachineTest {
         builder.addTransition(s1, i -> s2.of(i * 2));
         builder.addTransition(s2, i -> {
             if (i < 5) {
-                return s3.of(String.valueOf(i * 3));
+                return s3.of(String.valueOf(i * 3));  // times 3 and go to s3
             } else if (i < 10) {
-                return s3.of(String.valueOf(i + 3));
+                return s3.of(String.valueOf(i + 3));  // add 3 and go to s3
             } else {
-                return NextState.leaf();
+                return NextState.leaf();  // do not go to another state after finish this transition
             }
         });
 
@@ -78,40 +76,6 @@ class StateMachineTest {
         assertEquals(1, results2.getOutputs().size());
         assertEquals("3", results2.getOutputs().get(0));
     }
-
-    @Test
-    public void testRequiredState() {
-        StateMachineBuilder<Void, Integer> builder = StateMachineBuilder.create("test");
-
-        // define states
-        State<Integer> out = builder.addOutputState("out");
-
-        State<Void> in = builder.addInputState("in");
-        State<Void> s2 = builder.addState("s2");
-        State<Void> s3 = builder.addState("s3");
-        State<Void> s4 = builder.addState("s4");
-        State<Void> s5 = builder.addState("s5", Collections.singleton(out));  // s5 can only run when there is an output
-        State<Void> s6 = builder.addState("s6");
-
-
-        // define transitions
-        builder.addTransition(in, (i) -> s5.of(null));
-        builder.addTransition(s5, (i) -> s6.of(null));
-        builder.addTransition(s6, (i) -> out.of(2));
-
-        builder.addTransition(in, (i) -> s2.of(null));
-        builder.addTransition(s2, (i) -> s3.of(null));
-        builder.addTransition(s3, (i) -> s4.of(null));
-        builder.addTransition(s4, (i) -> out.of(1));
-
-
-        StateMachine<Void, Integer> stateMachine = builder.build();
-
-        // trigger from state1
-        Execution<Void, Integer> result = stateMachine.send(in.of(null));
-        assertThat(result.getOutputs()).containsExactly(1, 2);
-    }
-
 
     @Test
     public void testTransitionRequiredState() {
@@ -160,10 +124,11 @@ class StateMachineTest {
 
         // define transitions
         builder.addTransition(in, (i) -> s2.of(null));
-        builder.addTransition(in, (i) -> s6.of(null), setOf(s2, s5));
-        builder.addTransition(in, (i) -> s4.of(null), setOf(s2, s3));
-        builder.addTransition(in, (i) -> s3.of(null), setOf(s2));
-        builder.addTransition(in, (i) -> s5.of(null), setOf(s4));
+                                                                            // transition level dependencies
+        builder.addTransition(in, (i) -> s6.of(null), setOf(s2, s5));  // transition to s6 must run after reaching s2 and s5
+        builder.addTransition(in, (i) -> s4.of(null), setOf(s2, s3));  // transition to s4 must run after reaching s2 and s3
+        builder.addTransition(in, (i) -> s3.of(null), setOf(s2));      // transition to s3 must run after reaching s2
+        builder.addTransition(in, (i) -> s5.of(null), setOf(s4));      // transition to s5 must run after reaching s4
 
         builder.addTransition(s2, (i) -> out.of(2));
         builder.addTransition(s3, (i) -> out.of(3));
@@ -174,7 +139,7 @@ class StateMachineTest {
         StateMachine<Void, Integer> stateMachine = builder.build();
 
         Execution<Void, Integer> result = stateMachine.send(in.of(null));
-        assertThat(result.getOutputs()).containsExactly(2, 3, 4, 5, 6);
+        assertThat(result.getOutputs()).containsExactly(2, 3, 4, 5, 6);  // outputs are in specified order
     }
 
     @Test
@@ -188,7 +153,7 @@ class StateMachineTest {
 
         // define transitions
         builder.addTransition(in, (s) -> s2.of(null));
-        builder.addTransition(s2, (s, context) -> out.of(context.getOrError(in)));
+        builder.addTransition(s2, (s, context) -> out.of(context.getOrError(in)));  // get data of "in" state
 
         StateMachine<String, String> stateMachine = builder.build();
 
@@ -290,21 +255,21 @@ class StateMachineTest {
         StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("testExceptionHandler");
 
         // define states
-        State<Integer> state1 = builder.addState("intState1");
-        State<String> state2 = builder.addOutputState("intState2");
+        State<Integer> s1 = builder.addState("s1");
+        State<String> out = builder.addOutputState("out");
 
         // define transitions
-        builder.addTransition(state1, (i, c) -> {
-            throw new RuntimeException("state1 transition to error, intentional exception");
+        builder.addTransition(s1, (i, c) -> {
+            throw new RuntimeException("s1 throw an exception!");  // some transition can throw an exception
         });
 
         // define exception handler
-        builder.addExceptionHandler(RuntimeException.class, (e, c) -> state2.of("successfully handled"));
+        builder.addExceptionHandler(RuntimeException.class, (e, c) -> out.of("successfully handled"));  // handle it and transition to appropriate state
 
         StateMachine<Integer, String> stateMachine = builder.build();
 
         // run
-        Execution<Integer, String> results = stateMachine.send(state1.of(123));
+        Execution<Integer, String> results = stateMachine.send(s1.of(null));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }

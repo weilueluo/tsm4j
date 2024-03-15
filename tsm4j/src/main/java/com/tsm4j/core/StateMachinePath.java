@@ -9,10 +9,9 @@ import java.util.Map;
 
 /*
  * Represents a path in the state machine
- * Also responsible for recording state level activities in the executionContext
  * */
 @Getter
-class StateMachinePath<T, I, O> {
+class StateMachinePath<T> {
 
     private final T data;
     private final ArrayList<State<?>> path;
@@ -27,12 +26,6 @@ class StateMachinePath<T, I, O> {
 
     StateMachinePath(@NonNull ArrayList<State<?>> oldPath, @NonNull NextStateImpl<T> nextState) {
         this(oldPath, nextState.getState(), nextState.getData());
-    }
-
-    StateMachinePath(StateMachinePath<T, I, O> path) {
-        this.state = path.getState();
-        this.path = new ArrayList<>(path.getPath());
-        this.data = path.getData();
     }
 
     boolean isOutput() {

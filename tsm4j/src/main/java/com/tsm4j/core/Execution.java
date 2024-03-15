@@ -21,7 +21,7 @@ public class Execution<I, O> {
     private final I input;
     private final Map<State<?>, Object> stateDataMap;
 
-    Execution(StateMachinePath<I, I, O> initPath) {
+    Execution(StateMachinePath<I> initPath) {
         this.paths = new ArrayList<>();
         this.outputs = new ArrayList<>();
         this.inputState = initPath.getState();
@@ -31,7 +31,7 @@ public class Execution<I, O> {
         this.notifyNewPath(initPath);
     }
 
-    void notifyNewPath(@NonNull StateMachinePath<?, I, O> path) {
+    void notifyNewPath(@NonNull StateMachinePath<?> path) {
         if (path.isLeaf()) {
             // we got a complete path
             this.paths.add(path.getPath());

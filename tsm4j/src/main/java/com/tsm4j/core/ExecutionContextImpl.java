@@ -23,7 +23,7 @@ class ExecutionContextImpl<I, O> implements ExecutionContext {
             String name,
             Set<State<?>> states,
             Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap,
-            StateMachinePath<I, I, O> initPath) {
+            StateMachinePath<I> initPath) {
         this.name = name;
         this.states = states;
         this.exceptionHandlerMap = exceptionHandlerMap;
@@ -33,7 +33,7 @@ class ExecutionContextImpl<I, O> implements ExecutionContext {
         this.pathQueue.add(initPath);
     }
 
-    void notifyNewPath(StateMachinePath<?, I, O> path) {
+    void notifyNewPath(StateMachinePath<?> path) {
         this.execution.notifyNewPath(path);
     }
 

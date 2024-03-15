@@ -3,13 +3,12 @@ package com.tsm4j.core;
 import com.tsm4j.core.map.DependencyValueMap;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 class PathQueue<I, O> {
 
-    private final DependencyValueMap<State<?>, State<?>, StateMachinePath<?, I, O>> dependencyMap;
-    private final LinkedList<StateMachinePath<?, I, O>> freeQueue;
+    private final DependencyValueMap<State<?>, State<?>, StateMachinePath<?>> dependencyMap;
+    private final LinkedList<StateMachinePath<?>> freeQueue;
 
     PathQueue(Set<State<?>> states) {
         this.dependencyMap = new DependencyValueMap<>();
@@ -22,19 +21,15 @@ class PathQueue<I, O> {
         return this.freeQueue.isEmpty();
     }
 
-    StateMachinePath<?, I, O> pop() {
+    StateMachinePath<?> pop() {
         return this.freeQueue.pop();
     }
 
-    void addAll(List<StateMachinePath<?, I, O>> paths) {
-        paths.forEach(this::add);
-    }
-
-    void add(StateMachinePath<?, I, O> path) {
+    void add(StateMachinePath<?> path) {
         final State<?> reachedState = path.getState();
 
         // we have reached state on this path, try release state that depend on this state
-        final Set<StateMachinePath<?, I, O>> freedPaths = this.dependencyMap.removeDependency(reachedState);
+        final Set<StateMachinePath<?>> freedPaths = this.dependencyMap.removeDependency(reachedState);
         this.freeQueue.addAll(freedPaths);
 
         // if this state is already satisfied, then we can add it directly

@@ -22,12 +22,7 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
 
     @Override
     public <T> State<T> addState(String name) {
-        return addState(name, Collections.emptySet());
-    }
-
-    @Override
-    public <T> State<T> addState(String name, Set<State<?>> requiredStates) {
-        return this.addState(name, false, false, requiredStates);
+        return this.addState(name, false, false, Collections.emptySet());
     }
 
     @Override
@@ -38,13 +33,8 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
     }
 
     @Override
-    public State<O> addOutputState(String name) {
-        return addOutputState(name, Collections.emptySet());
-    }
-
-    @Override
-    public State<O> addOutputState(String name, Set<State<?>> requiredStates) {
-        final State<O> state = this.addState(name, false, true, requiredStates);
+    public State<O> addOutputState(String names) {
+        final State<O> state = this.addState(name, false, true, Collections.emptySet());
         this.outputStates.add(state);
         return state;
     }

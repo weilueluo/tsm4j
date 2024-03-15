@@ -11,11 +11,7 @@ public interface StateMachineBuilder<I, O> {
 
     <T> State<T> addState(String name);
 
-    <T> State<T> addState(String name, Set<State<?>> requiredStates);
-
     State<O> addOutputState(String name);
-
-    State<O> addOutputState(String name, Set<State<?>> requiredStates);
 
     State<I> addInputState(String name);
 

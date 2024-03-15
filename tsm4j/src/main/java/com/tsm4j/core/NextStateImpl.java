@@ -18,7 +18,7 @@ class NextStateImpl<T> implements NextState<T> {
     private final T data;
 
     // NextState can only be constructed from here
-    static <T, I, O> NextState<T> of(StateImpl<T> state, T data) {
+    static <T> NextState<T> of(StateImpl<T> state, T data) {
         return new NextStateImpl<>(state, data);
     }
 }
