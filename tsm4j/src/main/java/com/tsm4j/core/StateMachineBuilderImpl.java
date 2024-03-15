@@ -103,28 +103,4 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
     public StateMachine<I, O> build() {
         return new StateMachineImpl<>(name, states, inputStates, outputStates, exceptionHandlerMap);
     }
-
-//    public static class StateBuilder<T> {
-//        private final String name;
-//        private List<State<?>> requiredTransitionedStates = new ArrayList<>();
-//        private List<State<?>> requiredReachedStates = new ArrayList<>();
-//
-//        public StateBuilder(String name) {
-//            this.name = name;
-//        }
-//
-//        public StateBuilder<T> addRequiredReachedStates(List<State<?>> states) {
-//            this.requiredReachedStates.addAll(states);
-//            return this;
-//        }
-//
-//        public StateBuilder<T> addRequiredTransitionedStates(List<State<?>> states) {
-//            this.requiredTransitionedStates.addAll(states);
-//            return this;
-//        }
-//
-//        public State<?> build() {
-//
-//        }
-//    }
 }

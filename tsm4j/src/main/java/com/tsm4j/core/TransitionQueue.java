@@ -7,38 +7,37 @@ import java.util.Set;
 
 public class TransitionQueue<I, O> {
 
-    private final DependencyValueMap<String, State<?>, StateMachineTransition<?>> transitionDependencyMap;
-    private final LinkedList<StateMachineTransition<?>> freeTransitionQueue;
+    private final DependencyValueMap<String, State<?>, StateMachineTransition<?>> dependencyMap;
+    private final LinkedList<StateMachineTransition<?>> availableQueue;
 
     TransitionQueue() {
-        this.freeTransitionQueue = new LinkedList<>();
-        this.transitionDependencyMap = new DependencyValueMap<>();
+        this.availableQueue = new LinkedList<>();
+        this.dependencyMap = new DependencyValueMap<>();
     }
 
     StateMachineTransition<?> pop() {
-        return freeTransitionQueue.pop();
+        return availableQueue.pop();
     }
 
     boolean isEmpty() {
-        return this.freeTransitionQueue.isEmpty();
+        return this.availableQueue.isEmpty();
     }
 
     void consume(StateMachinePath<?, I, O> path) {
-        Set<StateMachineTransition<?>> freedTransitions = transitionDependencyMap.removeDependency(path.getState()); // we reached path containing this state, so remove it as dependency
-        this.freeTransitionQueue.addAll(freedTransitions);
+        Set<StateMachineTransition<?>> freedTransitions = dependencyMap.removeDependency(path.getState()); // we reached path containing this state, so remove it as dependency
+        this.availableQueue.addAll(freedTransitions);
         path.getTransitions().forEach(this::add);
     }
 
     private void add(StateMachineTransition<?> transition) {
-        if (!this.transitionDependencyMap.addDependencies(transition.getId(), transition.getRequiredStates())) {
-            // dependencies are already configured before for this transition
-            if (this.transitionDependencyMap.isFree(transition.getId())) {
-                // already satisfied
-                this.freeTransitionQueue.add(transition);
-            }
+        this.dependencyMap.addDependencies(transition.getId(), transition.getRequiredStates());
+        if (this.dependencyMap.isFree(transition.getId())) {
+            // already satisfied
+            this.availableQueue.add(transition);
+        } else {
+            // else dependencies not satisfied
+            // put on waiting list
+            this.dependencyMap.addValue(transition.getId(), transition);
         }
-        // else dependencies not satisfied
-        // put on waiting list
-        this.transitionDependencyMap.addValue(transition.getId(), transition);
     }
 }

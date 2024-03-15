@@ -3,9 +3,10 @@ package com.tsm4j.core;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 
 @Getter
@@ -26,17 +27,33 @@ class ExecutionContextImpl<I, O> implements ExecutionContext {
         this.name = name;
         this.states = states;
         this.exceptionHandlerMap = exceptionHandlerMap;
-        this.execution = new Execution<>(initPath.getState(), initPath.getData());
+        this.execution = new Execution<>(initPath);
+        this.transitionQueue = new TransitionQueue<>();
         this.pathQueue = new PathQueue<>(states);
         this.pathQueue.add(initPath);
-        this.transitionQueue = new TransitionQueue<>();
     }
 
-    public void recordOutput(O output) {
-        this.execution.recordOutput(output);
+    void notifyNewPath(StateMachinePath<?, I, O> path) {
+        this.execution.notifyNewPath(path);
     }
 
-    public void recordPath(List<State<?>> path) {
-        this.execution.recordPath(path);
+    @Override
+    public <T> Optional<T> get(State<T> state) {
+        return this.execution.get(state);
+    }
+
+    @Override
+    public <T> T getOrError(State<T> state) {
+        return this.execution.getOrError(state);
+    }
+
+    @Override
+    public <T> T getOrDefault(State<T> state, Supplier<T> defaultSupplier) {
+        return this.execution.getOrDefault(state, defaultSupplier);
+    }
+
+    @Override
+    public boolean isReached(State<?> state) {
+        return this.execution.isReached(state);
     }
 }

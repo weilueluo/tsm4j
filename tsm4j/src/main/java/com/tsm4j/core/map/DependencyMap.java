@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/*
+ * Manage dependency of type K and its set of dependencies of type D
+ * */
 public class DependencyMap<K, D> {
     private final Map<K, Set<D>> k2d;
     private final Map<D, Set<K>> d2k;
@@ -18,8 +21,8 @@ public class DependencyMap<K, D> {
 
     // return false if the key is already configured with some dependencies before
     public boolean addDependencies(K key, Set<D> dependencies) {
-        if (k2vAdd(key, dependencies)) {
-            dependencies.forEach(d -> v2kAdd(d, key));
+        if (k2dAdd(key, dependencies)) {
+            dependencies.forEach(dep -> d2kAdd(dep, key));
             return true;
         } else {
             return false;
@@ -51,7 +54,6 @@ public class DependencyMap<K, D> {
     }
 
     public Set<K> removeDependencies(Set<D> dependencies) {
-        // make it more efficient...
         Set<K> freedKeys = new HashSet<>();
         dependencies.forEach(d -> freedKeys.addAll(this.removeDependency(d)));
         return freedKeys;
@@ -72,7 +74,7 @@ public class DependencyMap<K, D> {
     }
 
     // return false if dependencies is already added for this key
-    private boolean k2vAdd(K key, Set<D> dependencies) {
+    private boolean k2dAdd(K key, Set<D> dependencies) {
         Set<D> existing = this.k2d.get(key);
         if (existing == null) {
             // new key and dependencies
@@ -85,7 +87,7 @@ public class DependencyMap<K, D> {
         }
     }
 
-    private void v2kAdd(D dependent, K key) {
+    private void d2kAdd(D dependent, K key) {
         Set<K> existing = this.d2k.get(dependent);
         if (existing != null) {
             existing.add(key);

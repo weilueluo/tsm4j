@@ -62,16 +62,12 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
                 } catch (RuntimeException e) {
                     nextState = this.handleException(e, context);
                 }
+
                 StateMachinePath<?, I, O> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
+                context.notifyNewPath(nextPath);
                 pathQueue.add(nextPath);
             } else {
-                final StateMachinePath<?, I, O> path = pathQueue.pop();
-                if (path.isOutput()) {
-                    context.recordOutput((O) path.getData());
-                }
-                if (path.isLeaf()) {
-                    context.recordPath(path.getPath());
-                }
+                StateMachinePath<?, I, O> path = pathQueue.pop();
                 transitionQueue.consume(path);
             }
         }

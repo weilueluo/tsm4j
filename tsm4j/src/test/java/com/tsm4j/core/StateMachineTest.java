@@ -1,13 +1,17 @@
 package com.tsm4j.core;
 
+import com.tsm4j.core.exception.StateNotReachedException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -123,20 +127,8 @@ class StateMachineTest {
         State<Void> s5 = builder.addState("s5");
         State<Void> s6 = builder.addState("s6");
 
-
         // define transitions
-        builder.addTransition(in, new Transition<Void>() {
-            @Override
-            public Set<State<?>> requiredStates() {
-                // need to have at least one output before running this transition
-                return Collections.singleton(out);
-            }
-
-            @Override
-            public NextState<?> apply(Void unused) {
-                return s5.of(null);
-            }
-        });
+        builder.addTransition(in, (i) -> s5.of(null), setOf(out));
         builder.addTransition(s5, (i) -> s6.of(null));
         builder.addTransition(s6, (i) -> out.of(2));
 
@@ -186,6 +178,66 @@ class StateMachineTest {
     }
 
     @Test
+    public void testGetStateData() {
+        StateMachineBuilder<String, String> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<String> in = builder.addInputState("in");
+        State<Void> s2 = builder.addState("s2");
+        State<String> out = builder.addOutputState("out");
+
+        // define transitions
+        builder.addTransition(in, (s) -> s2.of(null));
+        builder.addTransition(s2, (s, context) -> out.of(context.getOrError(in)));
+
+        StateMachine<String, String> stateMachine = builder.build();
+
+        Execution<String, String> result = stateMachine.send(in.of("data"));
+        assertThat(result.getOutputs()).containsExactly("data");
+    }
+
+    @Test
+    public void testGetStateData2() {
+        StateMachineBuilder<String, String> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<String> in = builder.addInputState("in");
+        State<String> s2 = builder.addState("s2");
+        State<String> s3 = builder.addState("s3");
+        State<String> out = builder.addOutputState("out");
+
+        // define transitions
+        builder.addTransition(in, (s) -> s3.of(null));
+        builder.addTransition(s3, (s, context) -> out.of(context.getOrError(s2)));
+
+        StateMachine<String, String> stateMachine = builder.build();
+
+        assertThatThrownBy(() -> stateMachine.send(in.of("data")))
+                .isInstanceOf(StateNotReachedException.class)
+                .hasMessage(s2.toString());
+    }
+
+    @Test
+    public void testGetStateData3() {
+        StateMachineBuilder<String, String> builder = StateMachineBuilder.create("test");
+
+        // define states
+        State<String> in = builder.addInputState("in");
+        State<String> s2 = builder.addState("s2");
+        State<String> s3 = builder.addState("s3");
+        State<String> out = builder.addOutputState("out");
+
+        // define transitions
+        builder.addTransition(in, (s) -> s3.of(null));
+        builder.addTransition(s3, (s, context) -> out.of(context.getOrDefault(s2, () -> "fallback")));
+
+        StateMachine<String, String> stateMachine = builder.build();
+
+        Execution<String, String> result = stateMachine.send(in.of("data"));
+        assertThat(result.getOutputs()).containsExactly("fallback");
+    }
+
+    @Test
     public void testMultipleOutputs() {
         StateMachineBuilder<Integer, String> builder = StateMachineBuilder.create("test");
 
@@ -231,7 +283,6 @@ class StateMachineTest {
         Execution<Integer, String> results = stateMachine.send(state1.of(0));
         assertEquals(1, results.getOutputs().size());
         assertEquals("11", results.getOutputs().get(0));
-
     }
 
     @Test
