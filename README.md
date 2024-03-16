@@ -37,13 +37,13 @@ State<Integer> s3 = builder.addOutputState(); // any value arrived at this state
 // define transitions
 builder.addTransition(s1, (Integer i) -> s2.of(i * 2));
 builder.addTransition(s2, (Integer i) -> {
-if (i < 5) {
-return s3.of(i * 3);
-} else if (i < 10) {
-return s3.of(i + 3);
-} else {
-return NextState.leaf();
-}
+    if (i < 5) {
+        return s3.of(i * 3);
+    } else if (i < 10) {
+        return s3.of(i + 3);
+    } else {
+        return NextState.leaf();
+    }
 });
 
 StateMachine<Integer> stateMachine = builder.build();
