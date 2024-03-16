@@ -25,23 +25,20 @@ public class DependencyValueMap<K, D, V> {
         return this.dependencyMap.isFree(key);
     }
 
-    public void addValues(K key, Set<V> values) {
-        Set<V> currValues = valuesMap.get(key);
-        if (currValues == null) {
-            valuesMap.put(key, new HashSet<>(values));
+    public boolean addValue(K key, V value) {
+        if (dependencyMap.containsKey(key) && dependencyMap.isFree(key)) {
+            // key is already free, so no point adding new return value
+            return false;
         } else {
-            currValues.addAll(values);
-        }
-    }
-
-    public void addValue(K key, V value) {
-        Set<V> currValues = valuesMap.get(key);
-        if (currValues == null) {
-            currValues = new HashSet<>();
-            currValues.add(value);
-            valuesMap.put(key, currValues);
-        } else {
-            currValues.add(value);
+            Set<V> currValues = valuesMap.get(key);
+            if (currValues == null) {
+                currValues = new HashSet<>();
+                currValues.add(value);
+                valuesMap.put(key, currValues);
+            } else {
+                currValues.add(value);
+            }
+            return true;
         }
     }
 

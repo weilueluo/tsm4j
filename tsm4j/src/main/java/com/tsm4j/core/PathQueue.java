@@ -5,7 +5,7 @@ import com.tsm4j.core.map.DependencyValueMap;
 import java.util.LinkedList;
 import java.util.Set;
 
-class PathQueue<I, O> {
+class PathQueue {
 
     private final DependencyValueMap<State<?>, State<?>, StateMachinePath<?>> dependencyMap;
     private final LinkedList<StateMachinePath<?>> freeQueue;
@@ -32,14 +32,10 @@ class PathQueue<I, O> {
         final Set<StateMachinePath<?>> freedPaths = this.dependencyMap.removeDependency(reachedState);
         this.freeQueue.addAll(freedPaths);
 
+        // try to put on waiting list, if cannot it means it is already satisfied
         // if this state is already satisfied, then we can add it directly
-        if (this.dependencyMap.isFree(reachedState)) {
+        if (!this.dependencyMap.addValue(reachedState, path)) {
             this.freeQueue.add(path);
-        } else {
-            // this path is not ready yet, there are states it depends on not reached.
-            // put on waiting list
-            this.dependencyMap.addValue(reachedState, path);
         }
     }
-
 }

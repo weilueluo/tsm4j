@@ -39,7 +39,7 @@ class StateMachinePath<T> {
 
     List<StateMachineTransition<T>> getTransitions() {
         List<StateMachineTransition<T>> transitions = new ArrayList<>();
-        for (Map.Entry<String, TransitionWithContext<T>> entry : state.getTransitionsMap().entrySet()) {
+        for (Map.Entry<String, Transition<T>> entry : state.getTransitionsMap().entrySet()) {
             transitions.add(new StateMachineTransition<>(entry.getKey(), entry.getValue(), this.data, this.path));
         }
         return transitions;

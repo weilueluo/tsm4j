@@ -1,9 +1,5 @@
 package com.tsm4j.core;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,46 +8,34 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 @Slf4j
-class StateMachineImpl<I, O> implements StateMachine<I, O> {
+class StateMachineImpl<O> implements StateMachine<O> {
 
     private final Set<State<?>> states;
-    private final Set<State<I>> inputStates;
     private final Set<State<O>> outputStates;
-    private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap;
-    @Getter
-    private final String name;
+    private final Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap;
 
     StateMachineImpl(
-            String name,
             Set<State<?>> states,
-            Set<State<I>> inputStates,
             Set<State<O>> outputStates,
-            Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap
+            Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap
     ) {
-        this.name = name;
         this.states = states;
-        this.inputStates = inputStates;
         this.outputStates = outputStates;
         this.exceptionHandlerMap = exceptionHandlerMap;
     }
 
-    public Execution<I, O> send(NextState<I> initState) {
-
-        final StateMachinePath<I> initPath = new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<I>) initState);
-        final ExecutionContextImpl<I, O> context = new ExecutionContextImpl<>(name, states, exceptionHandlerMap, initPath);
-
+    public <I> Execution<I, O> send(NextState<I> initState) {
+        StateMachinePath<I> initPath = new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<I>) initState);
+        ContextImpl<I, O> context = new ContextImpl<>(states, exceptionHandlerMap, initPath);
         this.execute(context);
-
         return context.getExecution();
     }
 
-    private void execute(ExecutionContextImpl<I, O> context) {
-        PathQueue<I, O> pathQueue = context.getPathQueue();
-        TransitionQueue<I, O> transitionQueue = context.getTransitionQueue();
+    private <T> void execute(ContextImpl<T, O> context) {
+        PathQueue pathQueue = context.getPathQueue();
+        TransitionQueue transitionQueue = context.getTransitionQueue();
         // run
         while (!transitionQueue.isEmpty() || !pathQueue.isEmpty()) {
             if (!transitionQueue.isEmpty()) {
@@ -62,9 +46,8 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
                 } catch (RuntimeException e) {
                     nextState = this.handleException(e, context);
                 }
-
                 StateMachinePath<?> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
-                context.notifyNewPath(nextPath);
+                context.notify(nextPath);
                 pathQueue.add(nextPath);
             } else {
                 StateMachinePath<?> path = pathQueue.pop();
@@ -74,8 +57,8 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
     }
 
     // recursively handle exception from transition and exception from handlers themselves
-    private <E extends RuntimeException> NextStateImpl<?> handleException(E e, ExecutionContextImpl<I, O> executionContext) {
-        Optional<ExceptionHandlerWithContext<E>> handlerToUse = getClosestExceptionHandler(e.getClass(), executionContext);
+    private <I, E extends RuntimeException> NextStateImpl<?> handleException(E e, ContextImpl<I, O> executionContext) {
+        Optional<ContextExceptionHandler<E>> handlerToUse = getClosestExceptionHandler(e.getClass(), executionContext);
         if (!handlerToUse.isPresent()) {
             throw e;
         } else {
@@ -91,11 +74,11 @@ class StateMachineImpl<I, O> implements StateMachine<I, O> {
     }
 
     @SuppressWarnings("unchecked")
-    private <E extends RuntimeException> Optional<ExceptionHandlerWithContext<E>> getClosestExceptionHandler(Class<?> clazz, ExecutionContextImpl<I, O> context) {
+    private <I, E extends RuntimeException> Optional<ContextExceptionHandler<E>> getClosestExceptionHandler(Class<?> clazz, ContextImpl<I, O> context) {
         if (clazz == null) {
             return Optional.empty();
         } else if (context.getExceptionHandlerMap().containsKey(clazz)) {
-            return Optional.ofNullable((ExceptionHandlerWithContext<E>) context.getExceptionHandlerMap().get(clazz));
+            return Optional.ofNullable((ContextExceptionHandler<E>) context.getExceptionHandlerMap().get(clazz));
         } else {
             return getClosestExceptionHandler(clazz.getSuperclass(), context);
         }

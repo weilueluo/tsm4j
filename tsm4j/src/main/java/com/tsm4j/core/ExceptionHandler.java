@@ -2,10 +2,10 @@ package com.tsm4j.core;
 
 
 @FunctionalInterface
-public interface ExceptionHandler<E extends RuntimeException> extends ExceptionHandlerWithContext<E> {
+public interface ExceptionHandler<E extends RuntimeException> extends ContextExceptionHandler<E> {
 
     @Override
-    default NextState<?> apply(E e, ExecutionContext context) {
+    default NextState<?> apply(E e, Context context) {
         return apply(e);
     }
 

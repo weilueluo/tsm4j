@@ -12,36 +12,39 @@ import java.util.Set;
 
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
+class StateMachineBuilderImpl<O> implements StateMachineBuilder<O> {
 
-    private final String name;
     private final Set<State<?>> states = new HashSet<>();
-    private final Set<State<I>> inputStates = new HashSet<>();
     private final Set<State<O>> outputStates = new HashSet<>();
-    private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
+    private final Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap = new HashMap<>();
+
+    /// ADD STATE
 
     @Override
     public <T> State<T> addState(String name) {
-        return this.addState(name, false, false, Collections.emptySet());
+        return this.addState(name, false, Collections.emptySet());
     }
 
     @Override
-    public State<I> addInputState(String name) {
-        final State<I> state = this.addState(name, true, false, Collections.emptySet());
-        this.inputStates.add(state);
-        return state;
+    public <T> State<T> addState() {
+        return this.addState("unnamed-" + states.size());
     }
 
     @Override
     public State<O> addOutputState(String name) {
-        final State<O> state = this.addState(name, false, true, Collections.emptySet());
+        final State<O> state = this.addState(name, true, Collections.emptySet());
         this.outputStates.add(state);
         return state;
     }
 
-    private <T> State<T> addState(String name, boolean isInput, boolean isOutput, Set<State<?>> requiredStates) {
+    @Override
+    public State<O> addOutputState() {
+        return this.addOutputState("unnamed-output-" + outputStates.size());
+    }
+
+    private <T> State<T> addState(String name, boolean isOutput, Set<State<?>> requiredStates) {
         Objects.requireNonNull(name);
-        final State<T> state = new StateImpl<>(name, isInput, isOutput, requiredStates);
+        final State<T> state = new StateImpl<>(name, isOutput, requiredStates);
         if (this.states.contains(state)) {
             throw new IllegalArgumentException("State already exists, state=" + state);
         }
@@ -49,8 +52,66 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
         return state;
     }
 
+    /// ADD TRANSITIONS
+
     @Override
-    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandlerWithContext<E> exceptionHandler) {
+    public <T> void addTransition(State<T> state, InputTransition<T> transition) {
+        this.addTransition(state, (Transition<T>) transition);
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, InputTransition<T> transition, Set<State<?>> requiredStates) {
+        this.addTransition(state, (Transition<T>) transition, requiredStates);
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition) {
+        Objects.requireNonNull(state);
+        Objects.requireNonNull(transition);
+        ((StateImpl<T>) state).addTransition(transition);
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates) {
+        Objects.requireNonNull(state);
+        Objects.requireNonNull(transition);
+        ((StateImpl<T>) state).addTransition(Transition.of(transition, requiredStates));
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, ContextTransition<T> transition) {
+        this.addTransition(state, ((Transition<T>) transition));
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, ContextTransition<T> transition, Set<State<?>> requiredStates) {
+        this.addTransition(state, (Transition<T>) transition, requiredStates);
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, VoidTransition<T> transition) {
+        this.addTransition(state, ((Transition<T>) transition));
+    }
+
+    @Override
+    public <T> void addTransition(State<T> state, VoidTransition<T> transition, Set<State<?>> requiredStates) {
+        this.addTransition(state, (Transition<T>) transition, requiredStates);
+    }
+
+    /// ADD EXCEPTION HANDLER
+
+    @Override
+    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {
+        addExceptionHandler(clazz, (ContextExceptionHandler<E>) exceptionHandler);
+    }
+
+    @Override
+    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, VoidExceptionHandler<E> exceptionHandler) {
+        addExceptionHandler(clazz, (ContextExceptionHandler<E>) exceptionHandler);
+    }
+
+    @Override
+    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ContextExceptionHandler<E> exceptionHandler) {
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(exceptionHandler);
         if (this.exceptionHandlerMap.containsKey(clazz)) {
@@ -60,37 +121,7 @@ class StateMachineBuilderImpl<I, O> implements StateMachineBuilder<I, O> {
     }
 
     @Override
-    public <T> void addTransition(State<T> state, Transition<T> transition) {
-        this.addTransition(state, transition, Collections.emptySet());
-    }
-
-    @Override
-    public <T> void addTransition(State<T> state, Transition<T> transition, Set<State<?>> requiredStates) {
-        Objects.requireNonNull(state);
-        Objects.requireNonNull(transition);
-        ((StateImpl<T>) state).addTransition(Transition.from(transition, requiredStates));
-    }
-
-    @Override
-    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition) {
-        this.addTransition(state, transition, Collections.emptySet());
-    }
-
-    @Override
-    public <T> void addTransition(State<T> state, TransitionWithContext<T> transition, Set<State<?>> requiredStates) {
-        Objects.requireNonNull(state);
-        Objects.requireNonNull(transition);
-        ((StateImpl<T>) state).addTransition(TransitionWithContext.from(transition, requiredStates));
-    }
-
-    @Override
-    public <E extends RuntimeException> void addExceptionHandler(Class<E> clazz, ExceptionHandler<E> exceptionHandler) {
-        Objects.requireNonNull(exceptionHandler);
-        addExceptionHandler(clazz, (ExceptionHandlerWithContext<E>) exceptionHandler);
-    }
-
-    @Override
-    public StateMachine<I, O> build() {
-        return new StateMachineImpl<>(name, states, inputStates, outputStates, exceptionHandlerMap);
+    public StateMachine<O> build() {
+        return new StateMachineImpl<>(states, outputStates, exceptionHandlerMap);
     }
 }
