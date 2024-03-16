@@ -7,7 +7,7 @@ Typed State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.7'
+implementation 'com.tsm4j:tsm4j:0.0.8'
 ```
 
 ### Maven
@@ -15,7 +15,7 @@ implementation 'com.tsm4j:tsm4j:0.0.7'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
 </dependency>
 ```
 
