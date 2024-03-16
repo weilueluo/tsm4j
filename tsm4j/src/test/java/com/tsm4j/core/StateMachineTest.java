@@ -16,7 +16,7 @@ class StateMachineTest {
 
     @Test
     public void demo_basic() {
-        // create a state machine builder with String output
+        // create a state machine builder with Integer output
         StateMachineBuilder<Integer> builder = StateMachineBuilder.newInstance();
 
         // define states

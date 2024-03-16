@@ -26,7 +26,7 @@ implementation 'com.tsm4j:tsm4j:0.0.8'
 Use `StateMachineBuilder` to create a `StateMachine` by specifying your states and transitions.
 
 ```java
-// create a state machine builder with String output
+// create a state machine builder with Integer output
 StateMachineBuilder<Integer> builder = StateMachineBuilder.newInstance();
 
 // define states
