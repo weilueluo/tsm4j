@@ -133,7 +133,7 @@ For more examples see tests.
 ## Why
 - I prefer an intuitive graph model that is easier to debug and learns what's going on.
 - I want to merge action and transition, event and state, and see if this simpler model works.
-- I want to use data from another state.
+- I want to use data from another state with type safety.
 
 ## Contributing
-Feel free to open up an issue for feature request, bug report, or pull request.
+Feel free to open up an issue for a feature request, bug report, or pull request.
