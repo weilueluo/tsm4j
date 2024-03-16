@@ -19,32 +19,23 @@ class StateImpl<T> implements State<T> {
     private final String name;
     @ToString.Include
     @EqualsAndHashCode.Include
-    private final boolean isInput;
-    @ToString.Include
-    @EqualsAndHashCode.Include
     private final boolean isOutput;
     private final Set<State<?>> requiredStates;
-    private final Map<String, TransitionWithContext<T>> transitionsMap;  // id to transition map
+    private final Map<String, Transition<T>> transitionsMap;  // id to transition map
 
     StateImpl(
             String name,
-            boolean isInput,
             boolean isOutput,
             Set<State<?>> requiredStates
     ) {
         this.name = name;
         this.isOutput = isOutput;
-        this.isInput = isInput;
         this.requiredStates = requiredStates;
         this.transitionsMap = new HashMap<>();
     }
 
     public boolean isLeaf() {
         return this.transitionsMap.isEmpty();
-    }
-
-    public boolean isInput() {
-        return this.isInput;
     }
 
     public boolean isOutput() {
@@ -55,11 +46,15 @@ class StateImpl<T> implements State<T> {
         return NextStateImpl.of(this, data);
     }
 
-    void addTransition(Transition<T> transition) {
-        this.addTransition((TransitionWithContext<T>) transition);
+    public NextState<T> of() {
+        return NextStateImpl.of(this, null);
     }
 
-    void addTransition(TransitionWithContext<T> transition) {
-        this.transitionsMap.put(name + "transition-" + transitionsMap.size(), transition);
+    void addTransition(InputTransition<T> transition) {
+        this.addTransition((Transition<T>) transition);
+    }
+
+    void addTransition(Transition<T> transition) {
+        this.transitionsMap.put(name + "-transition-" + transitionsMap.size(), transition);
     }
 }

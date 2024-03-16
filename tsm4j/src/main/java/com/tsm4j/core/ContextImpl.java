@@ -10,31 +10,29 @@ import java.util.function.Supplier;
 
 
 @Getter
-class ExecutionContextImpl<I, O> implements ExecutionContext {
-    private final LocalDateTime startTime = LocalDateTime.now();
-    private final String name;
-    private final Set<State<?>> states;
-    private final Execution<I, O> execution;
-    private final PathQueue<I, O> pathQueue;
-    private final TransitionQueue<I, O> transitionQueue;
-    private final Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap;
+class ContextImpl<I, O> implements Context {
 
-    public ExecutionContextImpl(
-            String name,
+    private final LocalDateTime startTime = LocalDateTime.now();
+    private final Set<State<?>> states;
+    private final ExecutionImpl<I, O> execution;
+    private final PathQueue pathQueue;
+    private final TransitionQueue transitionQueue;
+    private final Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap;
+
+    public ContextImpl(
             Set<State<?>> states,
-            Map<Class<?>, ExceptionHandlerWithContext<? extends RuntimeException>> exceptionHandlerMap,
+            Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap,
             StateMachinePath<I> initPath) {
-        this.name = name;
         this.states = states;
         this.exceptionHandlerMap = exceptionHandlerMap;
-        this.execution = new Execution<>(initPath);
-        this.transitionQueue = new TransitionQueue<>();
-        this.pathQueue = new PathQueue<>(states);
+        this.execution = new ExecutionImpl<>(initPath);
+        this.transitionQueue = new TransitionQueue();
+        this.pathQueue = new PathQueue(states);
         this.pathQueue.add(initPath);
     }
 
-    void notifyNewPath(StateMachinePath<?> path) {
-        this.execution.notifyNewPath(path);
+    void notify(StateMachinePath<?> path) {
+        this.execution.onNewPath(path);
     }
 
     @Override

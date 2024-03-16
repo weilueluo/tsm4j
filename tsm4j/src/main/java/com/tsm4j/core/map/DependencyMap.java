@@ -53,12 +53,6 @@ public class DependencyMap<K, D> {
         return freedKeys;
     }
 
-    public Set<K> removeDependencies(Set<D> dependencies) {
-        Set<K> freedKeys = new HashSet<>();
-        dependencies.forEach(d -> freedKeys.addAll(this.removeDependency(d)));
-        return freedKeys;
-    }
-
     public Set<D> getDependencies(K key) {
         return this.k2d.get(key);
     }

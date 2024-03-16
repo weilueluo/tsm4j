@@ -10,7 +10,7 @@ class StateLeaf extends StateImpl<Void> {
     private static final String NAME = "LEAF_STATE";
 
     StateLeaf() {
-        super(NAME, false, false, Collections.emptySet());
+        super(NAME, false, Collections.emptySet());
     }
 
     @Override
@@ -19,12 +19,12 @@ class StateLeaf extends StateImpl<Void> {
     }
 
     @Override
-    public void addTransition(Transition<Void> transition) {
+    public void addTransition(InputTransition<Void> transition) {
         throw new UnsupportedOperationException("leaf state has no transition");
     }
 
     @Override
-    public void addTransition(TransitionWithContext<Void> transition) {
+    public void addTransition(Transition<Void> transition) {
         throw new UnsupportedOperationException("leaf state has no transition");
     }
 

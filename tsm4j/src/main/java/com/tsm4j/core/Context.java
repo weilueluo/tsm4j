@@ -5,13 +5,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-// state machine runtime information
-public interface ExecutionContext {
+/*
+ * Context stores state machine runtime information
+ * */
+public interface Context {
+    /*
+     * Returns the states of the state machine
+     * */
     Set<State<?>> getStates();
 
+    /*
+     * Returns the start time of the state machine
+     * */
     LocalDateTime getStartTime();
-
-    String getName();
 
     /*
      * Return the latest data of the given state, wrapped in optional.
@@ -30,5 +36,8 @@ public interface ExecutionContext {
      * */
     <T> T getOrDefault(State<T> state, Supplier<T> defaultSupplier);
 
+    /*
+     * Returns whether given state is already reached at the point of time of calling this method.
+     * */
     boolean isReached(State<?> state);
 }

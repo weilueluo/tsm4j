@@ -5,9 +5,9 @@ import com.tsm4j.core.map.DependencyValueMap;
 import java.util.LinkedList;
 import java.util.Set;
 
-public class TransitionQueue<I, O> {
+public class TransitionQueue {
 
-    private final DependencyValueMap<String, State<?>, StateMachineTransition<?>> dependencyMap;
+    private final DependencyValueMap<StateMachineTransition<?>, State<?>, StateMachineTransition<?>> dependencyMap;
     private final LinkedList<StateMachineTransition<?>> availableQueue;
 
     TransitionQueue() {
@@ -30,14 +30,10 @@ public class TransitionQueue<I, O> {
     }
 
     private void add(StateMachineTransition<?> transition) {
-        this.dependencyMap.addDependencies(transition.getId(), transition.getRequiredStates());
-        if (this.dependencyMap.isFree(transition.getId())) {
+        this.dependencyMap.addDependencies(transition, transition.getRequiredStates());
+        if (!this.dependencyMap.addValue(transition, transition)) {
             // already satisfied
             this.availableQueue.add(transition);
-        } else {
-            // else dependencies not satisfied
-            // put on waiting list
-            this.dependencyMap.addValue(transition.getId(), transition);
         }
     }
 }
