@@ -1,5 +1,5 @@
 package com.tsm4j.core;
 
-public interface StateMachine<O> {
-    <T> Execution<T, O> send(NextState<T> initState);
+public interface StateMachine<E> {
+    Context<E> send(E initState);
 }

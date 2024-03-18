@@ -47,7 +47,7 @@ public class DependencyValueMap<K, D, V> {
     }
 
     public Set<V> removeDependency(D dependency) {
-        Set<K> freedKeys = this.dependencyMap.removeDependency(dependency);
+        Set<K> freedKeys = this.dependencyMap.satisfy(dependency);
         Set<V> allFreedValues = new HashSet<>();
         freedKeys.forEach(key -> {
             Set<V> freedValues = valuesMap.remove(key);

@@ -17,7 +17,7 @@ class StateMachineTest {
     @Test
     public void demo_basic() {
         // create a state machine builder with Integer output
-        StateMachineBuilder<Integer> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<Integer> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -48,7 +48,7 @@ class StateMachineTest {
 
     @Test
     public void test() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -61,19 +61,19 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // trigger from s1
-        Execution<Integer, String> results1 = stateMachine.send(s1.of(2));
+        Context<Integer, String> results1 = stateMachine.send(s1.of(2));
         assertEquals(1, results1.getOutputs().size());
         assertEquals("5", results1.getOutputs().get(0));
 
         // trigger from s2
-        Execution<Integer, String> results2 = stateMachine.send(s2.of(2));
+        Context<Integer, String> results2 = stateMachine.send(s2.of(2));
         assertEquals(1, results2.getOutputs().size());
         assertEquals("3", results2.getOutputs().get(0));
     }
 
     @Test
     public void testTransitionRequiredState() {
-        StateMachineBuilder<Integer> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<Integer> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> out = builder.addOutputState();
@@ -93,13 +93,13 @@ class StateMachineTest {
         StateMachine<Integer> stateMachine = builder.build();
 
         // trigger from state1
-        Execution<Void, Integer> result = stateMachine.send(in.of());
+        Context<Void, Integer> result = stateMachine.send(in.of());
         assertThat(result.getOutputs()).containsExactly(1, 2);
     }
 
     @Test
     public void demo_specifyingDependencies() {
-        StateMachineBuilder<Integer> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<Integer> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Void> in = builder.addState();
@@ -118,13 +118,13 @@ class StateMachineTest {
 
         StateMachine<Integer> stateMachine = builder.build();
 
-        Execution<Void, Integer> result = stateMachine.send(in.of());
+        Context<Void, Integer> result = stateMachine.send(in.of());
         assertThat(result.getOutputs()).containsExactly(1, 2, 3, 4, 5);  // outputs are in specified order
     }
 
     @Test
     public void testGetStateData() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<String> in = builder.addState();
@@ -137,13 +137,13 @@ class StateMachineTest {
 
         StateMachine<String> stateMachine = builder.build();
 
-        Execution<String, String> result = stateMachine.send(in.of("data"));
+        Context<String, String> result = stateMachine.send(in.of("data"));
         assertThat(result.getOutputs()).containsExactly("data");
     }
 
     @Test
     public void testGetStateData2() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<String> in = builder.addState();
@@ -164,7 +164,7 @@ class StateMachineTest {
 
     @Test
     public void testGetStateData3() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<String> in = builder.addState();
@@ -178,13 +178,13 @@ class StateMachineTest {
 
         StateMachine<String> stateMachine = builder.build();
 
-        Execution<String, String> result = stateMachine.send(in.of("data"));
+        Context<String, String> result = stateMachine.send(in.of("data"));
         assertThat(result.getOutputs()).containsExactly("fallback");
     }
 
     @Test
     public void testMultipleOutputs() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -199,14 +199,14 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // trigger from state1
-        Execution<Integer, String> results = stateMachine.send(s1.of(2));
+        Context<Integer, String> results = stateMachine.send(s1.of(2));
         assertEquals(2, results.getOutputs().size());
         assertThat(results.getOutputs()).containsExactlyInAnyOrder("5", "6");
     }
 
     @Test
     public void testRecursiveTransition() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> state1 = builder.addState();
@@ -225,14 +225,14 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // trigger from state1
-        Execution<Integer, String> results = stateMachine.send(state1.of(0));
+        Context<Integer, String> results = stateMachine.send(state1.of(0));
         assertEquals(1, results.getOutputs().size());
         assertEquals("11", results.getOutputs().get(0));
     }
 
     @Test
     public void demo_handleException() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -249,14 +249,14 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // run
-        Execution<Integer, String> results = stateMachine.send(s1.of());
+        Context<Integer, String> results = stateMachine.send(s1.of());
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
 
     @Test
     public void testNestedExceptionHandler() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -276,14 +276,14 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // run
-        Execution<Integer, String> results = stateMachine.send(s1.of(123));
+        Context<Integer, String> results = stateMachine.send(s1.of(123));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
 
     @Test
     public void testNestedSameExceptionHandler() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> state1 = builder.addState();
@@ -306,7 +306,7 @@ class StateMachineTest {
 
     @Test
     public void testExceptionHandler_throwingSubclass() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> s1 = builder.addState();
@@ -323,14 +323,14 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // run
-        Execution<Integer, String> results = stateMachine.send(s1.of(123));
+        Context<Integer, String> results = stateMachine.send(s1.of(123));
         assertEquals(1, results.getOutputs().size());
         assertEquals("successfully handled", results.getOutputs().get(0));
     }
 
     @Test
     public void testNoOutput() {
-        StateMachineBuilder<String> builder = StateMachineBuilder.newInstance();
+        EnumStateMachineBuilder<String> builder = EnumStateMachineBuilder.newInstance();
 
         // define states
         State<Integer> state1 = builder.addState();
@@ -344,7 +344,7 @@ class StateMachineTest {
         StateMachine<String> stateMachine = builder.build();
 
         // run
-        Execution<Integer, String> results = stateMachine.send(state1.of(0));
+        Context<Integer, String> results = stateMachine.send(state1.of(0));
         assertEquals(0, results.getOutputs().size());
     }
 

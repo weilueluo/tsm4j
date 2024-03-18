@@ -1,34 +1,28 @@
 package com.tsm4j.core;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 @ToString
 @Slf4j
-class StateMachineImpl<O> implements StateMachine<O> {
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+class EnumStateMachineImpl<E extends Enum<E>> implements StateMachine<E> {
 
-    private final Set<State<?>> states;
-    private final Set<State<O>> outputStates;
-    private final Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap;
+    private final EnumSet<E> states;
+    private final Map<NamedTransition<E>, Set<E>> transitionMap;
+    private final Map<Class<? extends RuntimeException>, ContextExceptionHandler<? extends RuntimeException, E>> exceptionHandlerMap;
 
-    StateMachineImpl(
-            Set<State<?>> states,
-            Set<State<O>> outputStates,
-            Map<Class<?>, ContextExceptionHandler<? extends RuntimeException>> exceptionHandlerMap
-    ) {
-        this.states = states;
-        this.outputStates = outputStates;
-        this.exceptionHandlerMap = exceptionHandlerMap;
-    }
 
-    public <I> Execution<I, O> send(NextState<I> initState) {
-        StateMachinePath<I> initPath = new StateMachinePath<>(new ArrayList<>(), (NextStateImpl<I>) initState);
-        ContextImpl<I, O> context = new ContextImpl<>(states, exceptionHandlerMap, initPath);
+    public Context<E> send(E initState) {
+        Path<E> initPath = new Path<>(null, initState);
+        ContextImpl<E> context = new ContextImpl<>(transitionMap, initState);
         this.execute(context);
         return context.getExecution();
     }
@@ -46,12 +40,12 @@ class StateMachineImpl<O> implements StateMachine<O> {
                 } catch (RuntimeException e) {
                     nextState = this.handleException(e, context);
                 }
-                StateMachinePath<?> nextPath = new StateMachinePath<>(transition.getPath(), nextState);
+                Path<?> nextPath = new Path<>(transition.getPath(), nextState);
                 context.notify(nextPath);
                 pathQueue.add(nextPath);
             } else {
-                StateMachinePath<?> path = pathQueue.pop();
-                transitionQueue.consume(path);
+                Path<?> path = pathQueue.pop();
+                transitionQueue.add(path);
             }
         }
     }
