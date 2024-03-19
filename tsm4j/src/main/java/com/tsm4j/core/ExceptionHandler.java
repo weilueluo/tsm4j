@@ -1,13 +1,8 @@
 package com.tsm4j.core;
 
 
+import java.util.function.Consumer;
+
 @FunctionalInterface
-public interface ExceptionHandler<E extends RuntimeException> extends ContextExceptionHandler<E> {
-
-    @Override
-    default NextState<?> apply(E e, Context context) {
-        return apply(e);
-    }
-
-    NextState<?> apply(E e);
+public interface ExceptionHandler<RE extends RuntimeException> extends Consumer<RE> {
 }

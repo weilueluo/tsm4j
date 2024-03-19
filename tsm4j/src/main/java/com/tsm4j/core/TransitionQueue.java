@@ -1,39 +1,29 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.map.DependencyValueMap;
-
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
-public class TransitionQueue {
+public class TransitionQueue<E extends Enum<E>> {
 
-    private final DependencyValueMap<StateMachineTransition<?>, State<?>, StateMachineTransition<?>> dependencyMap;
-    private final LinkedList<StateMachineTransition<?>> availableQueue;
+    private final DependencyMap<NamedTransition<E>, E> dependencyMap;
+    private final LinkedList<NamedTransition<E>> availableQueue;
 
-    TransitionQueue() {
+    TransitionQueue(Map<NamedTransition<E>, Set<E>> transitionMap) {
         this.availableQueue = new LinkedList<>();
-        this.dependencyMap = new DependencyValueMap<>();
+        this.dependencyMap = new DependencyMap<>(transitionMap);
     }
 
-    StateMachineTransition<?> pop() {
-        return availableQueue.pop();
+    NamedTransition<E> pop() {
+        return this.availableQueue.pop();
     }
 
     boolean isEmpty() {
         return this.availableQueue.isEmpty();
     }
 
-    void consume(StateMachinePath<?> path) {
-        Set<StateMachineTransition<?>> freedTransitions = dependencyMap.removeDependency(path.getState()); // we reached path containing this state, so remove it as dependency
-        this.availableQueue.addAll(freedTransitions);
-        path.getTransitions().forEach(this::add);
-    }
-
-    private void add(StateMachineTransition<?> transition) {
-        this.dependencyMap.addDependencies(transition, transition.getRequiredStates());
-        if (!this.dependencyMap.addValue(transition, transition)) {
-            // already satisfied
-            this.availableQueue.add(transition);
-        }
+    void add(E state) {
+        Set<NamedTransition<E>> freeTransitions = this.dependencyMap.satisfy(state);
+        this.availableQueue.addAll(freeTransitions);
     }
 }

@@ -1,0 +1,4 @@
+### Why State with type does not work
+The initial idea was to give each state a type, any transition entering a state will need to give it an instance of that type, any transition later on can exchange that state with the data.
+But this means user have to keep track of all states, which turns out to be very troublesome in real world use cases (compare to using enums, but enum does not support generics, so cant make each state associate with a class in a type safe manner with simple interface).
+There is also no type safe way to write transition, because each transition can depend on any number of states, so, no more state with type. 
