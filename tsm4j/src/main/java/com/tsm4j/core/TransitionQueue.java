@@ -1,7 +1,5 @@
 package com.tsm4j.core;
 
-import com.tsm4j.core.map.DependencyMap;
-
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -25,18 +23,7 @@ public class TransitionQueue<E extends Enum<E>> {
     }
 
     void add(E state) {
-        this.dependencyMap.satisfy(state);
-
-        Set<StateMachineTransition<?>> freedTransitions = dependencyMap.removeDependency(path.getState()); // we reached path containing this state, so remove it as dependency
-        this.availableQueue.addAll(freedTransitions);
-        path.getTransitions().forEach(this::add);
-    }
-
-    private void add(StateMachineTransition<?> transition) {
-        this.dependencyMap.addDependencies(transition, transition.getRequiredStates());
-        if (!this.dependencyMap.addValue(transition, transition)) {
-            // already satisfied
-            this.availableQueue.add(transition);
-        }
+        Set<NamedTransition<E>> freeTransitions = this.dependencyMap.satisfy(state);
+        this.availableQueue.addAll(freeTransitions);
     }
 }

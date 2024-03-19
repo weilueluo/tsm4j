@@ -5,7 +5,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,27 +14,12 @@ import java.util.Set;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class EnumStateMachineBuilderImpl<E extends Enum<E>> implements EnumStateMachineBuilder<E> {
 
-    private final EnumSet<E> states;
     private final Map<NamedTransition<E>, Set<E>> transitionMap;
     private final Map<Class<? extends RuntimeException>, ContextExceptionHandler<? extends RuntimeException, E>> exceptionHandlerMap;
 
-    public EnumStateMachineBuilderImpl(@NonNull Class<E> clazz) {
-        this.states = EnumSet.noneOf(clazz);
+    public EnumStateMachineBuilderImpl() {
         this.exceptionHandlerMap = new HashMap<>();
         this.transitionMap = new HashMap<>();
-    }
-
-    /// ADD STATE
-
-    public EnumStateMachineBuilder<E> addState(@NonNull E state) {
-        this.states.add(state);
-        return this;
-    }
-
-    @Override
-    public EnumStateMachineBuilder<E> addStates(@NonNull Class<E> clazz) {
-        this.states.addAll(EnumSet.allOf(clazz));
-        return this;
     }
 
     /// ADD EXCEPTION HANDLER
@@ -87,7 +71,7 @@ class EnumStateMachineBuilderImpl<E extends Enum<E>> implements EnumStateMachine
 
     @Override
     public StateMachine<E> build() {
-        return new EnumStateMachineImpl<>(states, transitionMap, exceptionHandlerMap);
+        return new EnumStateMachineImpl<>(transitionMap, exceptionHandlerMap);
     }
 
     private String getNextTransitionName() {
