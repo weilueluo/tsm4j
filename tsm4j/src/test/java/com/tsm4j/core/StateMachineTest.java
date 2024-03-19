@@ -2,15 +2,12 @@ package com.tsm4j.core;
 
 import org.junit.jupiter.api.Test;
 
-import javax.swing.plaf.nimbus.State;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StateMachineTest {
