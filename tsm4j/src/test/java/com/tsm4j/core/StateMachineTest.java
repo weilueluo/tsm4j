@@ -14,115 +14,115 @@ class StateMachineTest {
 
     @Test
     public void testBasic() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD), context -> context.send(MyEnum.MAKE_FOOD))
-                .addTransition(MyEnum.MAKE_FOOD, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(setOf(MyState.HUNGRY, MyState.NO_FOOD), context -> context.send(MyState.MAKE_FOOD))
+                .addTransition(MyState.MAKE_FOOD, context -> {
                     Supplier<Boolean> tryMakeFood = () -> true;
                     if (tryMakeFood.get()) {
-                        context.send(MyEnum.FOOD_IS_READY);
+                        context.send(MyState.FOOD_IS_READY);
                     } else {
-                        context.send(MyEnum.FOOD_IS_NOT_READY);
+                        context.send(MyState.FOOD_IS_NOT_READY);
                     }
                 })
-                .addTransition(setOf(MyEnum.HUNGRY, MyEnum.FOOD_IS_READY), context -> context.send(MyEnum.NOT_HUNGRY))
+                .addTransition(setOf(MyState.HUNGRY, MyState.FOOD_IS_READY), context -> context.send(MyState.NOT_HUNGRY))
                 .build();
 
-        assertTrue(stateMachine.send(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD)).hasReached(MyEnum.NOT_HUNGRY));
+        assertTrue(stateMachine.send(setOf(MyState.HUNGRY, MyState.NO_FOOD)).hasReached(MyState.NOT_HUNGRY));
     }
 
     @Test
     public void testPutGet() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD), context -> context.send(MyEnum.MAKE_FOOD))
-                .addTransition(MyEnum.MAKE_FOOD, context -> {
-                    int attempts = context.getOrDefault(Integer.class, () -> 0);
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(setOf(MyState.HUNGRY, MyState.NO_FOOD), context -> context.send(MyState.MAKE_FOOD))
+                .addTransition(MyState.MAKE_FOOD, context -> {
+                    int attempts = context.getOrDefault(MyState.ATTEMPTS, () -> 0);
                     if (attempts > 3) {
-                        context.send(MyEnum.FOOD_IS_READY);
+                        context.send(MyState.FOOD_IS_READY);
                     } else {
-                        context.put(attempts + 1);
-                        context.send(MyEnum.MAKE_FOOD);
+                        context.send(MyState.ATTEMPTS, attempts + 1);
+                        context.send(MyState.MAKE_FOOD);
                     }
                 })
-                .addTransition(setOf(MyEnum.HUNGRY, MyEnum.FOOD_IS_READY), context -> {
-                    // eat food logic...
-                    context.send(MyEnum.NOT_HUNGRY);
+                .addTransition(setOf(MyState.HUNGRY, MyState.FOOD_IS_READY, MyState.ATTEMPTS), context -> {
+                    System.out.println("attempts: " + context.getOrError(MyState.ATTEMPTS));
+                    context.send(MyState.NOT_HUNGRY);
                 })
                 .build();
 
-        assertTrue(stateMachine.send(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD)).hasReached(MyEnum.NOT_HUNGRY));
+        assertTrue(stateMachine.send(setOf(MyState.HUNGRY, MyState.NO_FOOD)).hasReached(MyState.NOT_HUNGRY));
     }
 
     @Test
     public void testHandleException() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(MyEnum.HUNGRY, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(MyState.HUNGRY, context -> {
                     throw new RuntimeException("exception!");
                 })
-                .addExceptionHandler(RuntimeException.class, (e, context) -> {
+                .addExceptionHandler(RuntimeException.class, (context, e) -> {
                     // custom eat food logic
-                    context.send(MyEnum.NOT_HUNGRY);
+                    context.send(MyState.NOT_HUNGRY);
                 })
                 .build();
 
-        assertTrue(stateMachine.send(MyEnum.HUNGRY).hasReached(MyEnum.NOT_HUNGRY));
+        assertTrue(stateMachine.send(MyState.HUNGRY).hasReached(MyState.NOT_HUNGRY));
     }
 
     @Test
     public void testHandleNestedException() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(MyEnum.HUNGRY, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(MyState.HUNGRY, context -> {
                     throw new RuntimeException("exception!");
                 })
-                .addExceptionHandler(RuntimeException.class, (e, context) -> {
+                .addExceptionHandler(RuntimeException.class, (context, e) -> {
                     throw new IllegalStateException("nested exception!");
                 })
-                .addExceptionHandler(IllegalStateException.class, (e, context) -> {
-                    context.send(MyEnum.NOT_HUNGRY);
+                .addExceptionHandler(IllegalStateException.class, (context, e) -> {
+                    context.send(MyState.NOT_HUNGRY);
                 })
                 .build();
 
-        assertTrue(stateMachine.send(MyEnum.HUNGRY).hasReached(MyEnum.NOT_HUNGRY));
+        assertTrue(stateMachine.send(MyState.HUNGRY).hasReached(MyState.NOT_HUNGRY));
     }
 
     @Test
     public void testHandleSubclassException() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(MyEnum.HUNGRY, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(MyState.HUNGRY, context -> {
                     throw new IllegalStateException("nested exception!");
                 })
-                .addExceptionHandler(RuntimeException.class, (e, context) -> {
-                    context.send(MyEnum.NOT_HUNGRY);
+                .addExceptionHandler(RuntimeException.class, (context, e) -> {
+                    context.send(MyState.NOT_HUNGRY);
                 })
                 .build();
 
-        assertTrue(stateMachine.send(MyEnum.HUNGRY).hasReached(MyEnum.NOT_HUNGRY));
+        assertTrue(stateMachine.send(MyState.HUNGRY).hasReached(MyState.NOT_HUNGRY));
     }
 
     @Test
     public void testHandleThrowingSameException() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(MyEnum.HUNGRY, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(MyState.HUNGRY, context -> {
                     throw new RuntimeException("exception!");
                 })
-                .addExceptionHandler(RuntimeException.class, (e, context) -> {
+                .addExceptionHandler(RuntimeException.class, (context, e) -> {
                     throw e;
                 })
                 .build();
 
-        assertThatThrownBy(() -> stateMachine.send(MyEnum.HUNGRY))
+        assertThatThrownBy(() -> stateMachine.send(MyState.HUNGRY))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("exception!");
     }
 
     @Test
     public void testThrowingNotHandledException() {
-        StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-                .addTransition(MyEnum.HUNGRY, context -> {
+        StateMachine stateMachine = StateMachineBuilder.newInstance()
+                .addTransition(MyState.HUNGRY, context -> {
                     throw new RuntimeException("exception!");
                 })
                 .build();
 
-        assertThatThrownBy(() -> stateMachine.send(MyEnum.HUNGRY))
+        assertThatThrownBy(() -> stateMachine.send(MyState.HUNGRY))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("exception!");
     }
@@ -132,7 +132,14 @@ class StateMachineTest {
         return new HashSet<>(Arrays.asList(values));
     }
 
-    enum MyEnum {
-        HUNGRY, NO_FOOD, FOOD_IS_NOT_READY, MAKE_FOOD, FOOD_IS_READY, NOT_HUNGRY
+    private static class MyState {
+        public static final State<Void> HUNGRY = State.create();
+        public static final State<Void> NO_FOOD = State.create();
+        public static final State<Void> FOOD_IS_NOT_READY = State.create();
+        public static final State<Void> MAKE_FOOD = State.create();
+        public static final State<Void> FOOD_IS_READY = State.create();
+        public static final State<Void> NOT_HUNGRY = State.create();
+
+        public static final State<Integer> ATTEMPTS = State.create();
     }
 }

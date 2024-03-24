@@ -4,17 +4,17 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-public class TransitionQueue<E extends Enum<E>> {
+public class TransitionQueue {
 
-    private final DependencyMap<NamedTransition<E>, E> dependencyMap;
-    private final LinkedList<NamedTransition<E>> availableQueue;
+    private final DependencyMap<NamedTransition, State<?>> dependencyMap;
+    private final LinkedList<NamedTransition> availableQueue;
 
-    TransitionQueue(Map<NamedTransition<E>, Set<E>> transitionMap) {
+    TransitionQueue(Map<NamedTransition, Set<State<?>>> transitionMap) {
         this.availableQueue = new LinkedList<>();
         this.dependencyMap = new DependencyMap<>(transitionMap);
     }
 
-    NamedTransition<E> pop() {
+    NamedTransition pop() {
         return this.availableQueue.pop();
     }
 
@@ -22,8 +22,8 @@ public class TransitionQueue<E extends Enum<E>> {
         return this.availableQueue.isEmpty();
     }
 
-    void add(E state) {
-        Set<NamedTransition<E>> freeTransitions = this.dependencyMap.satisfy(state);
+    void add(State<?> state) {
+        Set<NamedTransition> freeTransitions = this.dependencyMap.satisfy(state);
         this.availableQueue.addAll(freeTransitions);
     }
 }

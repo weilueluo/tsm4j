@@ -2,8 +2,10 @@ package com.tsm4j.core;
 
 import java.util.Set;
 
-public interface StateMachine<E extends Enum<E>> {
-    Context<E> send(E state);
+public interface StateMachine {
+    Context send(State<Void> state);
 
-    Context<E> send(Set<E> states);
+    <T> Context send(State<T> state, T data);
+
+    Context send(Set<State<Void>> states);
 }
