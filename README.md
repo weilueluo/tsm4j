@@ -1,13 +1,13 @@
 # tsm4j
 > :warning: This library is still under heavy development, interfaces are subject to change.
 
-~~Typed~~ State Machine for Java
+State Machine for Java
 
 ## Install
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.0.9'
+implementation 'com.tsm4j:tsm4j:0.1.0'
 ```
 
 ### Maven
@@ -20,62 +20,77 @@ implementation 'com.tsm4j:tsm4j:0.0.9'
 ```
 
 ## Usage
+Tsm4j tries to provide a simple and intuitive state machine model with minimum configuration. 
+The definition of state machine is just **states** and **transitions** that will be executed when some states is reached.
 
 ### Basic Example
+An example of a class holding some states:
+```java
+private static class MyState {
+    public static final State<Void> HUNGRY = State.create();
+    public static final State<Void> NO_FOOD = State.create();
+    public static final State<Void> FOOD_IS_NOT_READY = State.create();
+    public static final State<Void> MAKE_FOOD = State.create();
+    public static final State<Void> FOOD_IS_READY = State.create();
+    public static final State<Void> NOT_HUNGRY = State.create();
+
+    public static final State<Integer> ATTEMPTS = State.create();
+}
+```
+An example of defining and running a state machine:
 
 ```java
-StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-        .addTransition(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD), context -> context.send(MyEnum.MAKE_FOOD))
-        .addTransition(MyEnum.MAKE_FOOD, context -> {
+StateMachine stateMachine = StateMachineBuilder.newInstance()
+        .addTransition(setOf(MyState.HUNGRY, MyState.NO_FOOD), context -> context.send(MyState.MAKE_FOOD))
+        .addTransition(MyState.MAKE_FOOD, context -> {
             Supplier<Boolean> tryMakeFood = () -> true;
             if (tryMakeFood.get()) {
-                context.send(MyEnum.FOOD_IS_READY);
+                context.send(MyState.FOOD_IS_READY);
             } else {
-                context.send(MyEnum.FOOD_IS_NOT_READY);
+                context.send(MyState.FOOD_IS_NOT_READY);
             }
         })
-        .addTransition(setOf(MyEnum.HUNGRY, MyEnum.FOOD_IS_READY), context -> context.send(MyEnum.NOT_HUNGRY))
+        .addTransition(setOf(MyState.HUNGRY, MyState.FOOD_IS_READY), context -> context.send(MyState.NOT_HUNGRY))
         .build();
 
-assertTrue(stateMachine.send(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD)).hasReached(MyEnum.NOT_HUNGRY));
+assertTrue(stateMachine.send(setOf(MyState.HUNGRY, MyState.NO_FOOD)).hasReached(MyState.NOT_HUNGRY));
 ```
 
 ### Save and Loading data
-
-```java
-StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-        .addTransition(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD), context -> context.send(MyEnum.MAKE_FOOD))
-        .addTransition(MyEnum.MAKE_FOOD, context -> {
-            int attempts = context.getOrDefault(Integer.class, () -> 0);
-            if (attempts > 3) {
-                context.send(MyEnum.FOOD_IS_READY);
-            } else {
-                context.put(attempts + 1);
-                context.send(MyEnum.MAKE_FOOD);
-            }
-        })
-        .addTransition(setOf(MyEnum.HUNGRY, MyEnum.FOOD_IS_READY), context -> {
-            // eat food logic...
-            context.send(MyEnum.NOT_HUNGRY);
-        })
-        .build();
-
-assertTrue(stateMachine.send(setOf(MyEnum.HUNGRY, MyEnum.NO_FOOD)).hasReached(MyEnum.NOT_HUNGRY));
+Note that all states have a type associated with them, this is to allow you to save and load data from an arbitrary state,
+To ensure the data is available in some transition, specify that state as a dependency.
+```
+// ...
+.addTransition(MyState.MAKE_FOOD, context -> {
+    int attempts = context.getOrDefault(MyState.ATTEMPTS, () -> 0);
+    if (attempts > 3) {
+        context.send(MyState.FOOD_IS_READY);
+    } else {
+        context.send(MyState.ATTEMPTS, attempts + 1);
+        context.send(MyState.MAKE_FOOD);
+    }
+})
+.addTransition(setOf(MyState.HUNGRY, MyState.FOOD_IS_READY, MyState.ATTEMPTS), context -> {
+    System.out.println("attempts: " + context.getOrError(MyState.ATTEMPTS));
+    context.send(MyState.NOT_HUNGRY);
+})
+.build();
+// ...
 ```
 ### Handling Exceptions
-
+You can handle exception raised from the state machine by defining an exception handler
 ```java
-StateMachine<MyEnum> stateMachine = EnumStateMachineBuilder.newInstance(MyEnum.class)
-        .addTransition(MyEnum.HUNGRY, context -> {
+StateMachine stateMachine = StateMachineBuilder.newInstance()
+        .addTransition(MyState.HUNGRY, context -> {
             throw new RuntimeException("exception!");
         })
-        .addExceptionHandler(RuntimeException.class, (e, context) -> {
+        .addExceptionHandler(RuntimeException.class, (context, e) -> {
             // custom eat food logic
-            context.send(MyEnum.NOT_HUNGRY);
+            context.send(MyState.NOT_HUNGRY);
         })
         .build();
 
-assertTrue(stateMachine.send(MyEnum.HUNGRY).hasReached(MyEnum.NOT_HUNGRY));
+assertTrue(stateMachine.send(MyState.HUNGRY).hasReached(MyState.NOT_HUNGRY));
 ```
 
 ### More Examples
@@ -84,7 +99,7 @@ For more examples see tsm4j/test.
 ## Why
 - I prefer an intuitive graph model that is easier to debug and learns what's going on.
 - I want to merge action and transition, event and state, and see if this simpler model works.
-- ~~I want to use data from another state with type safety~~ (does not work nicely).
+- I want to use data from another state with type safety.
 
 ## Contributing
 Feel free to open up an issue for a feature request, bug report, or pull request.

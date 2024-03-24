@@ -17,11 +17,11 @@
 3. Zip the release files
    ```bash
    cd tsm4j/build/repos/releases
-   zip release.zip ./com/tsm4j/tsm4j/0.0.8/*
+   zip release.zip ./com/tsm4j/tsm4j/0.1.0/*
    cd -
    ```
 4. Open https://central.sonatype.com/publishing
-   1. sign in
+   1. sign in (continue with google)
    2. upload
    3. wait for validation
    4. publish

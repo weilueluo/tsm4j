@@ -4,18 +4,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public interface Context<E> {
-    void send(E state);
+public interface Context {
+    void send(State<Void> state);
 
-    boolean hasReached(E state);
+    <T> void send(State<T> state, T data);
 
-    Set<E> getReached();
+    boolean hasReached(State<?> state);
 
-    <T> void put(T data);
+    Set<State<?>> getReached();
 
-    <T> Optional<T> get(Class<T> clazz);
+    <T> Optional<T> get(State<T> state);
 
-    <T> T getOrError(Class<T> clazz);
+    <T> T getOrError(State<T> state);
 
-    <T> T getOrDefault(Class<T> clazz, Supplier<T> defaultSupplier);
+    <T> T getOrDefault(State<T> state, Supplier<T> defaultSupplier);
 }
