@@ -48,6 +48,42 @@ class DependencyMapTest {
     }
 
     @Test
+    void multipleSameDependencies() {
+        DependencyMap<String, Integer> mapUnderTest = DependencyMap.<String, Integer>builder()
+                .addDependencies("a1-3", setOf(1, 2, 3))
+                .addDependencies("b1-3", setOf(1, 2, 3))
+                .addDependencies("a2-4", setOf(2, 3, 4))
+                .addDependencies("b2-4", setOf(2, 3, 4))
+                .addDependencies("a3-5", setOf(3, 4, 5))
+                .addDependencies("b3-5", setOf(3, 4, 5))
+                .build();
+
+        assertThat(mapUnderTest.satisfy(1)).isEmpty();
+        assertThat(mapUnderTest.satisfy(2)).isEmpty();
+        assertThat(mapUnderTest.satisfy(3)).containsExactlyInAnyOrder("a1-3", "b1-3");
+        assertThat(mapUnderTest.satisfy(4)).containsExactlyInAnyOrder("a2-4", "b2-4");
+        assertThat(mapUnderTest.satisfy(5)).containsExactlyInAnyOrder("a3-5", "b3-5");
+    }
+
+    @Test
+    void multipleSameDependencies2() {
+        DependencyMap<String, Integer> mapUnderTest = DependencyMap.<String, Integer>builder()
+                .addDependencies("a1-3", setOf(1, 2, 3))
+                .addDependencies("b1-3", setOf(1, 2, 3))
+                .addDependencies("c1-3", setOf(1, 2, 3))
+                .addDependencies("a3-5", setOf(3, 4, 5))
+                .addDependencies("b3-5", setOf(3, 4, 5))
+                .addDependencies("c3-5", setOf(3, 4, 5))
+                .build();
+
+        assertThat(mapUnderTest.satisfy(1)).isEmpty();
+        assertThat(mapUnderTest.satisfy(2)).isEmpty();
+        assertThat(mapUnderTest.satisfy(3)).containsExactlyInAnyOrder("a1-3", "b1-3", "c1-3");
+        assertThat(mapUnderTest.satisfy(4)).isEmpty();
+        assertThat(mapUnderTest.satisfy(5)).containsExactlyInAnyOrder("a3-5", "b3-5", "c3-5");
+    }
+
+    @Test
     void unevenSatisfyOrder() {
         DependencyMap<String, Integer> mapUnderTest = DependencyMap.<String, Integer>builder()
                 .addDependencies("1-3", setOf(1, 2, 3))

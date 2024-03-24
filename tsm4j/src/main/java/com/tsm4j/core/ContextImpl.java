@@ -1,35 +1,36 @@
 package com.tsm4j.core;
 
 import com.tsm4j.core.exception.DataNotFoundException;
-import lombok.NonNull;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-class ContextImpl<E extends Enum<E>> implements Context<E> {
+class ContextImpl implements Context {
 
-    private final Map<Class<?>, Object> dataStore;
-    private final LinkedList<E> pendingQueue;
-    private final TransitionQueue<E> readyQueue;
-    private final Set<E> reachedStates;
+    private final Map<State<?>, Object> dataStore;
+    private final LinkedList<State<?>> pendingQueue;
+    private final TransitionQueue readyQueue;
 
-    ContextImpl(Map<NamedTransition<E>, Set<E>> transitionMap) {
+    ContextImpl(Map<NamedTransition, Set<State<?>>> transitionMap) {
         this.dataStore = new HashMap<>();
         this.pendingQueue = new LinkedList<>();
-        this.readyQueue = new TransitionQueue<>(transitionMap);
-        this.reachedStates = new HashSet<>();
+        this.readyQueue = new TransitionQueue(transitionMap);
     }
 
     @Override
-    public void send(E state) {
-        this.reachedStates.add(state);
+    public void send(State<Void> state) {
+        this.send(state, null);
+    }
+
+    @Override
+    public <T> void send(State<T> state, T data) {
         this.pendingQueue.add(state);
+        this.dataStore.put(state, data);
     }
 
     boolean isEmpty() {
@@ -37,7 +38,7 @@ class ContextImpl<E extends Enum<E>> implements Context<E> {
         return readyQueue.isEmpty();
     }
 
-    NamedTransition<E> pop() {
+    NamedTransition pop() {
         updateReadyQueue();
         return readyQueue.pop();
     }
@@ -49,32 +50,27 @@ class ContextImpl<E extends Enum<E>> implements Context<E> {
     }
 
     @Override
-    public boolean hasReached(E state) {
-        return this.reachedStates.contains(state);
+    public boolean hasReached(State<?> state) {
+        return this.dataStore.containsKey(state);
     }
 
     @Override
-    public Set<E> getReached() {
-        return Collections.unmodifiableSet(this.reachedStates);
+    public Set<State<?>> getReached() {
+        return Collections.unmodifiableSet(this.dataStore.keySet());
     }
 
     @Override
-    public <T> void put(@NonNull T data) {
-        this.dataStore.put(data.getClass(), data);
+    public <T> Optional<T> get(State<T> state) {
+        return Optional.ofNullable((T) this.dataStore.get(state));
     }
 
     @Override
-    public <T> Optional<T> get(Class<T> clazz) {
-        return Optional.ofNullable((T) this.dataStore.get(clazz));
+    public <T> T getOrError(State<T> state) {
+        return get(state).orElseThrow(() -> new DataNotFoundException(state.getName()));
     }
 
     @Override
-    public <T> T getOrError(Class<T> clazz) {
-        return get(clazz).orElseThrow(() -> new DataNotFoundException(clazz.getSimpleName()));
-    }
-
-    @Override
-    public <T> T getOrDefault(Class<T> clazz, Supplier<T> defaultSupplier) {
-        return this.get(clazz).orElseGet(defaultSupplier);
+    public <T> T getOrDefault(State<T> state, Supplier<T> defaultSupplier) {
+        return this.get(state).orElseGet(defaultSupplier);
     }
 }
