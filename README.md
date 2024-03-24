@@ -1,5 +1,4 @@
 # tsm4j
-> :warning: This library is still under heavy development, interfaces are subject to change.
 
 State Machine for Java
 
