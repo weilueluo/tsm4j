@@ -1,79 +1,117 @@
 package com.tsm4j.core;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
+public class StateMachineBuilderImpl<S extends Enum<S>> implements StateMachineBuilder<S> {
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class StateMachineBuilderImpl implements StateMachineBuilder {
+    private final Set<S> allStates;
 
-    private final Map<NamedTransition, Set<State<?>>> transitionMap;
-    private final Map<Class<? extends RuntimeException>, BiConsumer<Context, ? extends RuntimeException>> exceptionHandlerMap;
+    private final Map<S, List<Set<S>>> stateDepsMap;  // state to its dependencies
+    private final Map<Set<S>, List<StateListener<S>>> stateListenersMap;  // dependencies to their triggers
 
-    public StateMachineBuilderImpl() {
-        this.exceptionHandlerMap = new HashMap<>();
-        this.transitionMap = new HashMap<>();
+    StateMachineBuilderImpl(Set<S> allStates) {
+        this(allStates, new HashMap<>(), new HashMap<>());
     }
 
-
-    @Override
-    public <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, BiConsumer<Context, RE> exceptionHandler) {
-        this.exceptionHandlerMap.put(clazz, exceptionHandler);
-        return this;
+    StateMachineBuilderImpl(Set<S> allStates, Map<S, List<Set<S>>> stateDepsMap, Map<Set<S>, List<StateListener<S>>> stateListenersMap) {
+        this.allStates = allStates;
+        this.stateDepsMap = stateDepsMap;
+        this.stateListenersMap = stateListenersMap;
     }
 
-    @Override
-    public <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, Consumer<RE> exceptionHandler) {
-        this.addExceptionHandler(clazz, (c, re) -> exceptionHandler.accept(re));
-        return this;
+    static <S extends Enum<S>> StateMachineBuilderImpl<S> statesFrom(Class<S> clazz) {
+        Objects.requireNonNull(clazz);
+        return new StateMachineBuilderImpl<>(EnumSet.allOf(clazz));
     }
 
-    @Override
-    public <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, Runnable exceptionHandler) {
-        this.addExceptionHandler(clazz, (c, re) -> exceptionHandler.run());
-        return this;
+    static <S extends Enum<S>> StateMachineBuilderImpl<S> from(StateMachine<S> stateMachine) {
+        Objects.requireNonNull(stateMachine);
+        StateMachineImpl<S> stateMachineImpl = (StateMachineImpl<S>) stateMachine;
+        return new StateMachineBuilderImpl<>(stateMachineImpl._allStates, stateMachineImpl._stateDepsMap, stateMachineImpl._listenerMap);
     }
 
-    @Override
-    public <T> StateMachineBuilder addTransition(State<T> state, Runnable transition) {
-        this.addTransition(state, (c) -> transition.run());
-        return this;
-    }
+    /*
+     * transitions related operations
+     * */
 
     @Override
-    public <T> StateMachineBuilder addTransition(State<T> state, Consumer<Context> transition) {
-        this.addTransition(Collections.singleton(state), transition);
-        return this;
+    public StateMachineBuilder<S> addTransition(S fromState, S toState) {
+        return this.addTransition(Collections.singleton(fromState), toState);
     }
 
     @Override
-    public StateMachineBuilder addTransition(Set<State<?>> states, Runnable transition) {
-        return this.addTransition(states, (c) -> transition.run());
-    }
-
-    @Override
-    public StateMachineBuilder addTransition(Set<State<?>> states, Consumer<Context> transition) {
-        if (states.isEmpty()) {
-            throw new IllegalArgumentException("States cannot be empty");
+    public StateMachineBuilder<S> addTransition(Set<S> requiredStates, S toState) {
+        Objects.requireNonNull(requiredStates);
+        Objects.requireNonNull(toState);
+        if (!requiredStates.isEmpty()) {
+            this.stateDepsMap.putIfAbsent(toState, new LinkedList<>());
+            this.stateDepsMap.get(toState).add(Collections.unmodifiableSet(new HashSet<>(requiredStates)));
         }
-        NamedTransition namedTransition = new NamedTransition(getNextTransitionName(), transition);
-        this.transitionMap.put(namedTransition, states);
         return this;
     }
 
     @Override
-    public StateMachine build() {
-        return new StateMachineImpl(transitionMap, exceptionHandlerMap);
+    public StateMachineBuilder<S> removeTransition(S fromState, S toState) {
+        return this.removeTransition(Collections.singleton(fromState), toState);
     }
 
-    private String getNextTransitionName() {
-        return "transition-" + this.transitionMap.size() + 1;
+    @Override
+    public StateMachineBuilder<S> removeTransition(Set<S> requiredStates, S toState) {
+        if (this.stateDepsMap.containsKey(toState)) {
+            this.stateDepsMap.get(toState).remove(requiredStates);
+        }
+        return this;
+    }
+
+    /*
+     * listeners related operations
+     * */
+
+    @Override
+    public StateMachineBuilder<S> addListener(S requiredState, StateListener<S> listener) {
+        return this.addListener(Collections.singleton(requiredState), listener);
+    }
+
+    @Override
+    public StateMachineBuilder<S> addListener(Set<S> requiredStates, StateListener<S> listener) {
+        Set<S> immutableSets = Collections.unmodifiableSet(new HashSet<>(requiredStates));
+        this.stateListenersMap.putIfAbsent(immutableSets, new LinkedList<>());
+        this.stateListenersMap.get(immutableSets).add(listener);
+        return this;
+    }
+
+    @Override
+    public StateMachineBuilder<S> addListener(StateListener<S> listener) {
+        this.allStates.forEach(state -> this.addListener(state, listener));
+        return this;
+    }
+
+    @Override
+    public StateMachineBuilder<S> removeListener(Set<S> requiredStates, StateListener<S> listener) {
+        Objects.requireNonNull(requiredStates);
+        if (this.stateListenersMap.containsKey(requiredStates)) {
+            this.stateListenersMap.get(requiredStates).remove(listener);
+        }
+        return this;
+    }
+
+    @Override
+    public StateMachineBuilder<S> removeAllListeners(Set<S> requiredStates) {
+        Objects.requireNonNull(requiredStates);
+        this.stateListenersMap.remove(requiredStates);
+        return this;
+    }
+
+    @Override
+    public StateMachine<S> build() {
+        return new StateMachineImpl<>(stateDepsMap, stateListenersMap, allStates);
     }
 }

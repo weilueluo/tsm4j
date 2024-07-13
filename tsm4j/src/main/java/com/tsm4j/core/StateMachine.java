@@ -1,11 +1,19 @@
 package com.tsm4j.core;
 
+import java.util.List;
 import java.util.Set;
 
-public interface StateMachine {
-    Context send(State<Void> state);
+public interface StateMachine<S extends Enum<S>> {
+    StateMachineContext<S> send(List<S> states);
 
-    <T> Context send(State<T> state, T data);
+    StateMachineContext<S> send(S state);
 
-    Context send(Set<State<Void>> states);
+    void queue(List<S> states);
+
+    StateMachineContext<S> process();
+
+    Set<S> getAllStates();
+
+    StateMachineBuilder<S> toBuilder();
+
 }
