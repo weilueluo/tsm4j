@@ -10,12 +10,12 @@ import java.util.Set;
 /*
  * Manage dependency of type K and its set of dependencies of type D
  * */
-public class DependencyMap<K, D> {
-    private final Map<K, Set<D>> k2d;  // unmodifiable
-    private final Map<D, Set<K>> d2k;  // unmodifiable
+class DependencyMap<K, D> {
+    private final Map<K, Set<D>> k2d;
+    private final Map<D, Set<K>> d2k;
     private final Map<K, LinkedList<Set<D>>> k2ds;
 
-    public DependencyMap(Map<K, Set<D>> dependencies) {
+    DependencyMap(Map<K, Set<D>> dependencies) {
         this.k2d = new HashMap<>(dependencies);
         this.d2k = initReverseMap(dependencies);
         this.k2ds = initDependenciesMap(dependencies);
@@ -45,14 +45,11 @@ public class DependencyMap<K, D> {
         if (affectedKeys != null) {
             affectedKeys.forEach(affectedKey -> {
                 // here loop through each dependency, and see if we can release the key
-
                 // if no existing dependency set for the key contains dependency, we will create a new set of dependency for it to remove
                 boolean notRemoved = true;
 
                 LinkedList<Set<D>> depsList = this.k2ds.get(affectedKey);
 
-                // TODO: remove this loop by keeping track of the index of each dependency
-                // NOTE: above will result in using arraylist instead of linked list thus potentially extra space
                 for (Set<D> deps : depsList) {
                     if (deps.remove(dep)) {
                         notRemoved = false;
@@ -81,19 +78,19 @@ public class DependencyMap<K, D> {
         return freed;
     }
 
-    public static class Builder<K, D> {
+    static class Builder<K, D> {
         private final Map<K, Set<D>> deps;
 
         private Builder() {
             this.deps = new HashMap<>();
         }
 
-        public Builder<K, D> addDependencies(K key, Set<D> deps) {
+        Builder<K, D> addDependencies(K key, Set<D> deps) {
             this.deps.computeIfAbsent(key, (k) -> new HashSet<>()).addAll(deps);
             return this;
         }
 
-        public DependencyMap<K, D> build() {
+        DependencyMap<K, D> build() {
             return new DependencyMap<>(this.deps);
         }
     }

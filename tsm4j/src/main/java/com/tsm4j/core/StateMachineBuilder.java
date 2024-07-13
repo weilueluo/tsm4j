@@ -1,28 +1,34 @@
 package com.tsm4j.core;
 
-
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
-public interface StateMachineBuilder {
-    static StateMachineBuilder newInstance() {
-        return new StateMachineBuilderImpl();
+public interface StateMachineBuilder<S extends Enum<S>> {
+
+    StateMachineBuilder<S> addTransition(S fromState, S toState);
+
+    StateMachineBuilder<S> addTransition(Set<S> requiredStates, S toStates);
+
+    StateMachineBuilder<S> removeTransition(S fromState, S toState);
+
+    StateMachineBuilder<S> removeTransition(Set<S> requiredStates, S toStates);
+
+    StateMachineBuilder<S> addListener(S requiredState, StateListener<S> listener);
+
+    StateMachineBuilder<S> addListener(Set<S> requiredStates, StateListener<S> listener);
+
+    StateMachineBuilder<S> addListener(StateListener<S> listener);
+
+    StateMachineBuilder<S> removeListener(Set<S> requiredStates, StateListener<S> listener);
+
+    StateMachineBuilder<S> removeAllListeners(Set<S> requiredStates);
+
+    StateMachine<S> build();
+
+    static <S extends Enum<S>> StateMachineBuilder<S> from(Class<S> clazz) {
+        return StateMachineBuilderImpl.statesFrom(clazz);
     }
 
-    <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, BiConsumer<Context, RE> exceptionHandler);
-
-    <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, Consumer<RE> exceptionHandler);
-
-    <RE extends RuntimeException> StateMachineBuilder addExceptionHandler(Class<RE> clazz, Runnable exceptionHandler);
-
-    <T> StateMachineBuilder addTransition(State<T> state, Runnable transition);
-
-    <T> StateMachineBuilder addTransition(State<T> state, Consumer<Context> transition);
-
-    StateMachineBuilder addTransition(Set<State<?>> states, Runnable transition);
-
-    StateMachineBuilder addTransition(Set<State<?>> states, Consumer<Context> transition);
-
-    StateMachine build();
+    static <S extends Enum<S>> StateMachineBuilder<S> from(StateMachine<S> stateMachine) {
+        return StateMachineBuilderImpl.from(stateMachine);
+    }
 }
