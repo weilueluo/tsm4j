@@ -6,7 +6,7 @@ Tiny State Machine for Java
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:0.1.0'
+implementation 'com.tsm4j:tsm4j:1.0.0'
 ```
 
 ### Maven
