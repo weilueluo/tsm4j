@@ -1,6 +1,6 @@
 # tsm4j
 
-Tiny State Machine for Java
+A tiny, in-memory, state machine for Java
 
 ## Install
 
