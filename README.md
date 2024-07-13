@@ -20,7 +20,7 @@ implementation 'com.tsm4j:tsm4j:1.0.0'
 
 ## Usage
 
-### Basic Example
+### Example
 An example of defining and running a state machine:
 
 ```java
@@ -37,8 +37,8 @@ assertThat(stateMachine.send(TestState.HUNGRY).reached(TestState.FULL)).isTrue()
 ### More Examples
 For more examples see tsm4j/test.
 
-## About Older version
-It was going to wrong direction, we should separate state machine with action.
+## About the older version
+It was going in the wrong direction, we should separate state machine from action.
 
 
 ## Contributing
