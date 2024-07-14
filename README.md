@@ -34,12 +34,25 @@ StateMachine<TestState> stateMachine = StateMachineBuilder.from(TestState.class)
 assertThat(stateMachine.send(TestState.HUNGRY).reached(TestState.FULL)).isTrue();
 ```
 
+You can bind a listener which is called whenever some state(s) is reached
+```java
+StateMachine<TestState> stateMachine = StateMachineBuilder.from(TestState.class)
+    .addTransition(TestState.NO_FOOD, TestState.MAKE_FOOD)
+    .addListener(TestState.MAKE_FOOD, context -> {
+        System.out.println("making food...");
+        context.queue(TestState.FOOD_IS_READY);
+    })
+    .addListener(debugLoggingListener())
+    .build();
+
+assertThat(stateMachine.send(TestState.NO_FOOD).reached(TestState.FOOD_IS_READY)).isTrue();
+```
+
 ### More Examples
-For more examples see tsm4j/test.
+see tsm4j/test.
 
 ## About the older version
-It was going in the wrong direction, we should separate state machine from action.
-
+In short, it was going in the wrong direction, we should separate state machine from action.
 
 ## Contributing
 Feel free to open up an issue for a feature request, bug report, or pull request.

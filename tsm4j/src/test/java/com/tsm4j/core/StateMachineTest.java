@@ -56,7 +56,7 @@ class StateMachineTest {
     }
 
     @Test
-    public void queueWithContext() {
+    public void queueWithContext1() {
         StateMachine<TestState> stateMachine = StateMachineBuilder.from(TestState.class)
                 .addTransition(TestState.NO_FOOD, TestState.MAKE_FOOD)
                 .addTransition(TestState.MAKE_FOOD, TestState.FOOD_IS_READY)
@@ -70,6 +70,20 @@ class StateMachineTest {
                 .build();
 
         assertThat(stateMachine.send(TestState.NO_FOOD).reached(TestState.FULL)).isTrue();
+    }
+
+    @Test
+    public void queueWithContext2() {
+        StateMachine<TestState> stateMachine = StateMachineBuilder.from(TestState.class)
+                .addTransition(TestState.NO_FOOD, TestState.MAKE_FOOD)
+                .addListener(TestState.MAKE_FOOD, context -> {
+                    System.out.println("making food...");
+                    context.queue(TestState.FOOD_IS_READY);
+                })
+                .addListener(debugLoggingListener())
+                .build();
+
+        assertThat(stateMachine.send(TestState.NO_FOOD).reached(TestState.FOOD_IS_READY)).isTrue();
     }
 
     @SafeVarargs
