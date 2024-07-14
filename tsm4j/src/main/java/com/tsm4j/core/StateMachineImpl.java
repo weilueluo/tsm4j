@@ -100,11 +100,11 @@ public class StateMachineImpl<S extends Enum<S>> implements StateMachine<S> {
         // notify context
         this.context.onStateReached(state);
         // call listeners
-        listenerQueue.satisfy(state);
-        while (!listenerQueue.isEmpty()) {
-            listenerQueue.pop().get().forEach(listener -> listener.accept(this.context));
+        this.listenerQueue.satisfy(state);
+        while (!this.listenerQueue.isEmpty()) {
+            this.listenerQueue.pop().get().forEach(listener -> listener.accept(this.context));
         }
         // consume any state queued by the user
-        this.context.consumeQueuedStates(this.stateQueue::satisfy);
+        this.context.consumeQueuedStates(this::onStateReached);
     }
 }
