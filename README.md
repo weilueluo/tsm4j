@@ -1,12 +1,12 @@
 # tsm4j
 
-A tiny, in-memory, state machine for Java
+A tiny, in-memory, zero dependency state machine for Java
 
 ## Install
 
 ### Gradle
 ```
-implementation 'com.tsm4j:tsm4j:1.0.1'
+implementation 'com.tsm4j:tsm4j:1.0.2'
 ```
 
 ### Maven
@@ -14,7 +14,7 @@ implementation 'com.tsm4j:tsm4j:1.0.1'
 <dependency>
     <groupId>com.tsm4j</groupId>
     <artifactId>tsm4j</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
