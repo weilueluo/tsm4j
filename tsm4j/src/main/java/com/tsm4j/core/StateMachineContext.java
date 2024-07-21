@@ -6,7 +6,7 @@ public interface StateMachineContext<S extends Enum<S>> {
 
     void queue(S state);
 
-    int getCount(S state);
+    int getReachedCount(S state);
 
     boolean reached(S state);
 

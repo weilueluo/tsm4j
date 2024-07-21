@@ -1,6 +1,6 @@
 # tsm4j
 
-A tiny, in-memory, zero dependency state machine for Java
+A tiny, in-memory, zero dependency state machine library
 
 ## Install
 

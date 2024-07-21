@@ -94,6 +94,16 @@ public class StateMachineImpl<S extends Enum<S>> implements StateMachine<S> {
         return StateMachineBuilderImpl.from(this);
     }
 
+    @Override
+    public boolean reached(S state) {
+        return this.context.reached(state);
+    }
+
+    @Override
+    public int getReachedCount(S state) {
+        return this.context.getReachedCount(state);
+    }
+
     private void onStateReached(S state) {
         // mark state satisfied
         this.stateQueue.satisfy(state);

@@ -34,13 +34,13 @@ public class StateMachineContextImpl<S extends Enum<S>> implements StateMachineC
     }
 
     @Override
-    public int getCount(S state) {
+    public int getReachedCount(S state) {
         return this.stateCountMap.getOrDefault(state, 0);
     }
 
     @Override
     public boolean reached(S state) {
-        return getCount(state) != 0;
+        return getReachedCount(state) != 0;
     }
 
     @Override
