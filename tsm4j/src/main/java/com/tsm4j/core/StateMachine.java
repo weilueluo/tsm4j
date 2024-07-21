@@ -16,4 +16,7 @@ public interface StateMachine<S extends Enum<S>> {
 
     StateMachineBuilder<S> toBuilder();
 
+    boolean reached(S state);
+
+    int getReachedCount(S state);
 }

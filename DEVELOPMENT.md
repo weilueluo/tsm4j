@@ -17,7 +17,7 @@
 3. Zip the release files
    ```bash
    cd tsm4j/build/repos/releases
-   zip release.zip ./com/tsm4j/tsm4j/1.0.2/*
+   zip release.zip ./com/tsm4j/tsm4j/1.1.0/*
    cd -
    ```
 4. Open https://central.sonatype.com/publishing
